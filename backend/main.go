@@ -55,6 +55,20 @@ type BowlingStats struct {
 	Economy     int `json:"economy"`
 }
 
+type Team struct {
+	Id     int    `json:"id"`
+	Name   string `json:"name"`
+	Abbrev string `json:"abbrev"`
+}
+
+type TeamStats struct {
+	GamesPlayed   int `json:"gamesPlayed"`
+	GamesWon      int `json:"gamesWon"`
+	PlayerCount   int `json:"playerCount"`
+	SeasonsPlayed int `json:"seasonsPlayed"`
+	SeasonsWon    int `json:"seasonsWon"`
+}
+
 func readPlayerData(db *sql.DB, id int) Player {
 	var res Player
 	var dob time.Time
@@ -142,6 +156,71 @@ func player(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func readTeamData(db *sql.DB, name string) Team {
+	var res Team
+
+	fmt.Println(name)
+	query := fmt.Sprintf("select * from Teams where \"name\" = '%s'", name)
+	team := db.QueryRow(query)
+	team.Scan(&res.Id, &res.Name, &res.Abbrev)
+
+	return res
+}
+
+func readTeamStats(db *sql.DB, id int) TeamStats {
+	var stats TeamStats
+
+	query := fmt.Sprintf("select count(id) as gamesPlayed, count(distinct seasonNo) as seasonsPlayed from Games where team1 = %d or team2 = %d", id, id)
+	queryRowRes := db.QueryRow(query)
+	queryRowRes.Scan(&stats.GamesPlayed, stats.SeasonsPlayed)
+
+	query = fmt.Sprintf("select count(id) as gamesWon from Games where winner = %d", id)
+	queryRowRes = db.QueryRow(query)
+	queryRowRes.Scan(&stats.GamesWon)
+
+	query = fmt.Sprintf("select count(winner) as count from Seasons where winner = %d", id)
+	queryRowRes = db.QueryRow(query)
+	queryRowRes.Scan(&stats.SeasonsWon)
+
+	query = fmt.Sprintf("select count(playerId) as playerCount from MemberOf where teamId = %d", id)
+	queryRowRes = db.QueryRow(query)
+	queryRowRes.Scan(&stats.PlayerCount)
+
+	return stats
+}
+
+func team(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req map[string]any
+		res := make(map[string]any)
+
+		reqBody, _ := io.ReadAll(c.Request.Body)
+		json.Unmarshal(reqBody, &req)
+
+		team := readTeamData(db, req["team"].(string))
+		stats := readTeamStats(db, team.Id)
+		var players []Player
+
+		fmt.Println(team, stats)
+
+		query := fmt.Sprintf("select playerId from MemberOf where teamId = %d", team.Id)
+		queryRows, _ := db.Query(query)
+		defer queryRows.Close()
+
+		for queryRows.Next() {
+			var playerId int
+			queryRows.Scan(&playerId)
+			players = append(players, readPlayerData(db, playerId))
+		}
+
+		res["data"] = team
+		res["stats"] = stats
+		res["players"] = players
+
+		c.JSON(http.StatusOK, res)
+	}
+}
+
 func main() {
 	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -153,6 +232,7 @@ func main() {
 
 	engine := gin.Default()
 	engine.GET("/player", player(db))
+	engine.GET("/team", team(db))
 
 	engine.Run()
 }
