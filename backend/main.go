@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
@@ -69,11 +68,23 @@ type TeamStats struct {
 	SeasonsWon    int `json:"seasonsWon"`
 }
 
-func readPlayerData(db *sql.DB, id int) Player {
+func readPlayerData(db *sql.DB, name string) Player {
 	var res Player
 	var dob time.Time
 
-	query := fmt.Sprintf("select * from Players where id = %d", id)
+	query := fmt.Sprintf("select * from Players where \"name\"= '%s'", name)
+	player := db.QueryRow(query)
+	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity)
+
+	res.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
+	return res
+}
+
+func readPlayerDataFromID(db *sql.DB, id int) Player {
+	var res Player
+	var dob time.Time
+
+	query := fmt.Sprintf("select * from Players where id= %d", id)
 	player := db.QueryRow(query)
 	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity)
 
@@ -104,8 +115,13 @@ func readBattingStats(db *sql.DB, id int) BattingStats {
 	queryRowRes = db.QueryRow(query)
 	queryRowRes.Scan(&stats.NotOut)
 
-	stats.StrikeRate = float32(stats.Runs * 100.0 / stats.Balls)
-	stats.Average = float32(float32(stats.Runs) / float32(stats.Innings))
+	if stats.Balls > 0 {
+		stats.StrikeRate = float32(stats.Runs * 100.0 / stats.Balls)
+	}
+
+	if stats.Innings > 0 {
+		stats.Average = float32(float32(stats.Runs) / float32(stats.Innings))
+	}
 
 	return stats
 }
@@ -121,45 +137,47 @@ func readBowlingStats(db *sql.DB, id int) BowlingStats {
 	queryRowRes = db.QueryRow(query)
 	queryRowRes.Scan(&stats.Innings)
 
-	fmt.Println(stats)
+	if stats.Wickets == 0 {
+		stats.Average = stats.Runs
+	} else {
+		stats.Average = stats.Runs / stats.Wickets
+	}
 
-	stats.Average = stats.Runs / stats.Wickets
-	stats.Economy = stats.Runs / stats.Overs
+	if stats.Overs > 0 {
+		stats.Economy = stats.Runs / stats.Overs
+	}
 
 	return stats
 }
 
-func player(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		reqBody, _ := io.ReadAll(c.Request.Body)
-		var req map[string]any
-		json.Unmarshal(reqBody, &req)
-
-		query := fmt.Sprintf("select id from players where \"name\" = '%s'", req["player"])
-		playerId := db.QueryRow(query)
-
-		var id int
-		playerId.Scan(&id)
-		data := readPlayerData(db, id)
-
+func player(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		res := make(map[string]any)
-		res["data"] = data
+		var req map[string]any
+
+		reqBody, _ := io.ReadAll(r.Body)
+		json.Unmarshal(reqBody, &req)
+		data := readPlayerData(db, req["player"].(string))
 
 		if data.Affinity == "BATSMAN" || data.Affinity == "ALL_ROUNDER" || data.Affinity == "WICKET_KEEPER_BATSMAN" {
-			res["battingStats"] = readBattingStats(db, id)
-		}
-		if data.Affinity == "ALL_ROUNDER" || data.Affinity == "BOWLER" {
-			res["bowlingStats"] = readBowlingStats(db, id)
+			res["battingStats"] = readBattingStats(db, data.Id)
 		}
 
-		c.JSON(http.StatusOK, res)
+		if data.Affinity == "ALL_ROUNDER" || data.Affinity == "BOWLER" {
+			res["bowlingStats"] = readBowlingStats(db, data.Id)
+		}
+
+		w.Header().Set("content-type", "application/json")
+		res["data"] = data
+
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
 	}
 }
 
 func readTeamData(db *sql.DB, name string) Team {
 	var res Team
 
-	fmt.Println(name)
 	query := fmt.Sprintf("select * from Teams where \"name\" = '%s'", name)
 	team := db.QueryRow(query)
 	team.Scan(&res.Id, &res.Name, &res.Abbrev)
@@ -189,19 +207,17 @@ func readTeamStats(db *sql.DB, id int) TeamStats {
 	return stats
 }
 
-func team(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func team(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var req map[string]any
 		res := make(map[string]any)
 
-		reqBody, _ := io.ReadAll(c.Request.Body)
+		reqBody, _ := io.ReadAll(r.Body)
 		json.Unmarshal(reqBody, &req)
 
 		team := readTeamData(db, req["team"].(string))
 		stats := readTeamStats(db, team.Id)
 		var players []Player
-
-		fmt.Println(team, stats)
 
 		query := fmt.Sprintf("select playerId from MemberOf where teamId = %d", team.Id)
 		queryRows, _ := db.Query(query)
@@ -210,14 +226,16 @@ func team(db *sql.DB) gin.HandlerFunc {
 		for queryRows.Next() {
 			var playerId int
 			queryRows.Scan(&playerId)
-			players = append(players, readPlayerData(db, playerId))
+			players = append(players, readPlayerDataFromID(db, playerId))
 		}
 
 		res["data"] = team
 		res["stats"] = stats
 		res["players"] = players
 
-		c.JSON(http.StatusOK, res)
+		w.Header().Set("content-type", "apllication/json")
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
 	}
 }
 
@@ -230,9 +248,7 @@ func main() {
 	}
 	defer db.Close()
 
-	engine := gin.Default()
-	engine.GET("/player", player(db))
-	engine.GET("/team", team(db))
-
-	engine.Run()
+	http.HandleFunc("/player", player(db))
+	http.HandleFunc("/team", team(db))
+	http.ListenAndServe(":8000", nil)
 }
