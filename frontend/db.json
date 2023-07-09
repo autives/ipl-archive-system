@@ -1,0 +1,35 @@
+
+{
+  "Player": [{
+      "id": 1,
+      "name": "Mahendra Singh Dhoni",
+      "country": "India",
+      "age": "23",
+      "affinity": "Wicket Keeper"
+    }]
+  ,
+  "BattingStats": 
+    [{
+      "run": 69,
+      "strikerate": 78,
+      "average": 34,
+      "balls": 78,
+      "sixes": 97,
+      "fours": 45,
+      "innings": 43,
+      "fifties": 43,
+      "centuries": 78,
+      "notout": 43
+    }]
+  ,
+  "BowlingStasts": 
+    [{
+      "innings": 43,
+      "overs": 34,
+      "runs": 56,
+      "maidenovers": 67,
+      "wickets": 76,
+      "extras": 78,
+      "average": 56
+    }]
+}
