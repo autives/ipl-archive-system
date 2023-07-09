@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -239,6 +240,50 @@ func team(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func playerSearch(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
+		fmt.Println(queries["name"][0])
+
+		var player Player
+		var players []Player
+		var dob time.Time
+		query := fmt.Sprintf("select * from Players where \"name\" like '%%%s%%'", queries["name"][0])
+
+		fmt.Println(query)
+		p, err := db.Query(query)
+		if err != nil {
+			panic(err)
+		}
+		defer p.Close()
+
+		for p.Next() {
+			p.Scan(&player.Id, &player.Name, &player.Country, &dob, &player.Affinity, &player.BattingAffinity, &player.BowlingAffinity)
+			player.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
+			players = append(players, player)
+		}
+
+		res := make(map[string]any)
+		w.Header().Set("content-type", "apllication/json")
+		res["matches"] = players
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
+	}
+}
+
+func image(w http.ResponseWriter, r *http.Request) {
+	var req map[string]any
+	reqBody, _ := io.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &req)
+
+	filePath := req["path"].(string)
+	fileData, _ := os.ReadFile(filePath)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write(fileData)
+}
+
 func main() {
 	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -249,6 +294,8 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/player", player(db))
+	http.HandleFunc("/playerSearch", playerSearch(db))
 	http.HandleFunc("/team", team(db))
+	http.HandleFunc("/image", image)
 	http.ListenAndServe(":8000", nil)
 }
