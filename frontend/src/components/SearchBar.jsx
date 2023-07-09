@@ -82,7 +82,7 @@ function SearchBar() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`/Player?term=${searchTerm}`);
+        const response = await axios.get(`/playerSearch?name=${searchTerm}`);
         setSearchResults(response.data);
       } catch (error) {
         console.error("Error fetching search results:", error);
@@ -118,10 +118,6 @@ function SearchBar() {
     };
   }, []);
 
-  const filteredResults = searchResults.filter((result) =>
-    result.name.toLowerCase().startsWith(searchTerm.toLowerCase())
-  );
-
   return (
     <div>
       <Search  ref={searchRef} onClick={() => setSelected(true)}>
@@ -133,9 +129,9 @@ function SearchBar() {
           onKeyDown={handleKeyPress}
         />
       </Search>
-      {(selected && filteredResults.length > 0) > 0 && (
+      {(selected && searchResults.length > 0) > 0 && (
         <SearchResults>
-          {filteredResults.map((result) => (
+          {searchResults.map((result) => (
             <NavLink
               className={"SearchResultItem"}
               key={result.id}

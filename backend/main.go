@@ -13,13 +13,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "autives"
-	password = "hellothere"
-	dbname   = "iplarchive"
-)
+type DBEnv struct {
+	host     string
+	port     int
+	user     string
+	password string
+	dbname   string
+}
 
 type Player struct {
 	Id              int    `json:"id"`
@@ -243,14 +243,12 @@ func team(db *sql.DB) http.HandlerFunc {
 func playerSearch(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		queries := r.URL.Query()
-		fmt.Println(queries["name"][0])
 
 		var player Player
 		var players []Player
 		var dob time.Time
 		query := fmt.Sprintf("select * from Players where \"name\" like '%%%s%%'", queries["name"][0])
 
-		fmt.Println(query)
 		p, err := db.Query(query)
 		if err != nil {
 			panic(err)
@@ -265,6 +263,7 @@ func playerSearch(db *sql.DB) http.HandlerFunc {
 
 		res := make(map[string]any)
 		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		res["matches"] = players
 		resBody, _ := json.Marshal(res)
 		w.Write(resBody)
@@ -285,7 +284,10 @@ func image(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	envFile, _ := os.ReadFile("../database/dbenv.json")
+	var dbEnv map[string]any
+	json.Unmarshal(envFile, &dbEnv)
+	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbEnv["host"].(string), int(dbEnv["port"].(float64)), dbEnv["user"].(string), dbEnv["password"].(string), dbEnv["dbname"].(string))
 
 	db, err := sql.Open("postgres", dbInfo)
 	if err != nil {

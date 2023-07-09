@@ -48,7 +48,7 @@ create table if not exists Players (
        country varchar(50) not null,
        dob date,
        "affinity" PlayerAffinity NOT NULL,
-       battingAffinity BattinAffinity,
+       battingAffinity BattingAffinity,
        bowlingAffinity BowlingAffinity
 
 );
