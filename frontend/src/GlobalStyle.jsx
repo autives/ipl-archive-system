@@ -1,4 +1,5 @@
 import { createGlobalStyle } from "styled-components";
+import background from "./images/trophy.jpg";
 
 export const GlobalStyle = createGlobalStyle`
 *{
@@ -6,10 +7,14 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
     box-sizing : border-box;
     font-family: 'Work Sans', sans-serif;
-   
 }
 body {
-  background-color : ${({ theme }) => theme.colors.bg};
+  background-image: url(${background});
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  // background-color: rgb(255, 255, 255, 0.5);
+  position: relative;
 }
 
 html {

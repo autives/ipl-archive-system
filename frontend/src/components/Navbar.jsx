@@ -9,6 +9,7 @@ function Navbar() {
       display: flex;
       gap: 5rem;
       align-items: center;
+      position: relative;
       li {
         list-style: none;
         .navbar_link {

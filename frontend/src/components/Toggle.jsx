@@ -4,7 +4,7 @@ const Togglebutton = styled.button`
     text-decoration : none;
     max-width: auto;
     background-color : ${(props) =>
-      props.active ? props.theme.colors.activeColor : props.theme.colors.bg};
+      props.active ? props.theme.colors.activeColor : "transparent"};
     color: ${(props) => (props.active ? "black" : "white")};  
     padding: 0.5rem 1rem;
     text-transform : uppercase;

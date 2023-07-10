@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 const MainContainer = styled.div`
     display : flex;
     justify-content : center;
+    background
 }
 `;
 
@@ -60,7 +61,7 @@ const Right_box = styled.div`
     grid-template-row: repeat(2, 1fr);
     align-items: center;
     display : grid;
-    background : ${({theme}) => theme.colors.bg};
+    //background : ${({theme}) => theme.colors.bg};
     height : 55rem;
     width: 55rem;
     border-radius : 10%;
@@ -83,7 +84,7 @@ const ButtonContainer = styled.div`
     padding : 0rem 0rem 0rem 5.1rem;
     flex-direction: row;
     align-items: flex-start; 
-    background : ${({theme}) => theme.colors.bg};
+    background : "transparent";
     > *:not(:last-child) {
         margin-right: 0;
       }
@@ -109,7 +110,7 @@ function Players() {
         const getPlayerData = async () => {
         try{
         // if(!playerData){
-        const res = await axios.get(`/Player/${id}`); 
+        const res = await axios.get(`/player?id=${id}`); 
         setPlayerData(res.data);
         setIsFetched(true);
         // }
@@ -140,17 +141,17 @@ function Players() {
     {isFetched && (
     <Container>
         <Left_box>
-            <Photos src = 'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/IPLHeadshot2023/62.png' alt="haina hola" />
+            <Photos src = 'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/playerheadshot/ipl/284/14.png' alt="haina hola" />
             <PlayerInfo>
             <div className= "PlayerName">
-            <h2 className='Name'>{playerData.name}</h2>
+            <h2 className='Name'>{playerData.data.name}</h2>
             </div>
             <h3 className='Country'>Country:</h3>
-            <h3 className='Country'>{playerData.country}</h3>
+            <h3 className='Country'>{playerData.data.country}</h3>
             <h3 className='Age'>Age:</h3>
-            <h3 className='Age'>{playerData.age}</h3>
+            <h3 className='Age'>{playerData.data.age}</h3>
             <h3 className='Affinity'>Role:</h3>
-            <h3 className='Affinity'>{playerData.affinity}</h3>
+            <h3 className='Affinity'>{playerData.data.affinity}</h3>
             </PlayerInfo>
         </Left_box>
         <Right_box>
@@ -159,7 +160,7 @@ function Players() {
             <ToggleButton active = {!showBatting} onClick={() => toggleCard(false)} label="Bowling" />
         </ButtonContainer>
         <PlayerStat>
-            {/* {(showBatting) ? <BattingCard battingStats={playerData} /> : <BowlingCard bowlingStats={playerData}/>} */}
+        {(showBatting) ? <BattingCard battingStats={playerData.battingStats} /> : <BowlingCard bowlingStats={playerData.bowlingStats} />}
         </PlayerStat>
         </Right_box>
     </Container>

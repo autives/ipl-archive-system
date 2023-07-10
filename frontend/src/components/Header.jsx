@@ -3,12 +3,13 @@ import { NavLink } from "react-router-dom";
 import Navbar from "./Navbar";
 import { styled } from "styled-components";
 import SearchBar from "./SearchBar";
+import logo from "../images/logo.png";
 
 function Header() {
   return (
     <Container>
       <NavLink to="/">
-        <img className="logo" src="./images/logo.png" alt="logo" />
+        <img className="logo" src={logo} alt="logo" />
       </NavLink>
       <Navbar />
     </Container>
@@ -17,7 +18,7 @@ function Header() {
 
 const Container = styled.div`
   height: 6rem;
-  background-color: ${({ theme }) => theme.colors.heading};
+  background-color:rgba(24, 24, 179, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;

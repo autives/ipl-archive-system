@@ -35,27 +35,27 @@ function BattingCard(props) {
         <h2 className="Stat">Batting Stats</h2>
       </div>
       <h3>Innings Played:</h3>
-      <h3 className="Haina_hola">{battingStats[0].innings}</h3>
+      <h3 className="Haina_hola">{battingStats.innings}</h3>
       <h3>Total Runs:</h3>
-      <h3 className="Haina_hola">{battingStats[0].run}</h3>
+      <h3 className="Haina_hola">{battingStats.runs}</h3>
       <h3>Balls Played:</h3>
-      <h3 className="Haina_hola">{battingStats[0].balls}</h3>
+      <h3 className="Haina_hola">{battingStats.balls}</h3>
       <h3>Strike Rate:</h3>
-      <h3 className="Haina_hola">{battingStats[0].strikerate}</h3>
+      <h3 className="Haina_hola">{battingStats.strikeRate}</h3>
       <h3>Not outs:</h3>
-      <h3 className="Haina_hola">{battingStats[0].notout}</h3>
+      <h3 className="Haina_hola">{battingStats.notOut}</h3>
       <h3>Average:</h3>
-      <h3 className="Haina_hola">{battingStats[0].average}</h3>
+      <h3 className="Haina_hola">{battingStats.average}</h3>
       <h3 className="Milestone">50s:</h3>
-      <h3 className="Haina_hola">{battingStats[0].fifties}</h3>
+      <h3 className="Haina_hola">{battingStats.fifties}</h3>
       <h3 className="Milestone">100s:</h3>
-      <h3 className="Haina_hola">{battingStats[0].centuries}</h3>
+      <h3 className="Haina_hola">{battingStats.centuries}</h3>
       <h3>Sixes:</h3>
-      <h3 className="Haina_hola">{battingStats[0].sixes}</h3>
+      <h3 className="Haina_hola">{battingStats.sixes}</h3>
       <h3>Fours:</h3>
-      <h3 className="Haina_hola">{battingStats[0].fours}</h3>
-      <h3>Not Out:</h3>
-      <h3 className="Haina_hola">{battingStats[0].notout}</h3>
+      <h3 className="Haina_hola">{battingStats.fours}</h3>
+      {/* <h3>Not Out:</h3> */}
+      {/* <h3 className"Haina_hola">{battingStats.notout}</h3>*/ }
     </Player_stat>
   );
 }

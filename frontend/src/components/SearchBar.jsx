@@ -72,6 +72,8 @@ function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selected, setSelected] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
+
   const searchRef = useRef(null);
 
   const handleInputChange = (event) => {
@@ -83,7 +85,8 @@ function SearchBar() {
     const fetchData = async () => {
       try {
         const response = await axios.get(`/playerSearch?name=${searchTerm}`);
-        setSearchResults(response.data);
+        setSearchResults(response.data.matches);
+        setIsFetched(true);
       } catch (error) {
         console.error("Error fetching search results:", error);
       }
@@ -93,6 +96,7 @@ function SearchBar() {
       fetchData();
     } else {
       setSearchResults([]);
+      setIsFetched(false);
     }
   }, [searchTerm]);
 
@@ -101,26 +105,36 @@ function SearchBar() {
     if (event.keyCode === 8 && searchTerm.length === 1) {
       // Handle backspace key and clear search results
       setSearchResults([]);
+      setIsFetched(false);
     }
   };
-
 
   const handleClickOutside = (event) => {
     if (searchRef.current && !searchRef.current.contains(event.target)) {
       setSelected(false);
+      setIsFetched(false);
     }
   };
 
   useEffect(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
+  const filteredResults = searchResults
+    ? searchResults.filter((result) =>
+        result.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
+  {
+    isFetched && console.log(searchResults);
+  }
+
   return (
     <div>
-      <Search  ref={searchRef} onClick={() => setSelected(true)}>
+      <Search ref={searchRef} onClick={() => setSelected(true)}>
         <FaSearch className="icon" id="search-icon" />
         <input
           placeholder="Search by name"
@@ -129,17 +143,23 @@ function SearchBar() {
           onKeyDown={handleKeyPress}
         />
       </Search>
-      {(selected && searchResults.length > 0) > 0 && (
+      {isFetched && selected && (
         <SearchResults>
-          {searchResults.map((result) => (
-            <NavLink
-              className={"SearchResultItem"}
-              key={result.id}
-              to={`/players/${result.id}`}
-            >
-              {result.name}
-            </NavLink>
-          ))}
+          {filteredResults && filteredResults.length > 0 ? (
+            filteredResults.map((result) => (
+              <NavLink
+                className="SearchResultItem"
+                key={result.id}
+                to={`/players/${result.id}`}
+              >
+                {result.name}
+              </NavLink>
+            ))
+          ) : (
+            <h3 className="SearchResultItem" id>
+              No results found.
+            </h3>
+          )}
         </SearchResults>
       )}
     </div>
