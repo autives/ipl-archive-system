@@ -8,7 +8,6 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -52,6 +51,7 @@ type Team struct {
 	Id     int    `json:"id"`
 	Name   string `json:"name"`
 	Abbrev string `json:"abbrev"`
+	Logo   string `json:"logo"`
 }
 
 type TeamStats struct {
@@ -174,7 +174,7 @@ func readTeamData(db *sql.DB, id int) Team {
 
 	query := fmt.Sprintf("select * from Teams where id = '%d'", id)
 	team := db.QueryRow(query)
-	team.Scan(&res.Id, &res.Name, &res.Abbrev)
+	team.Scan(&res.Id, &res.Name, &res.Abbrev, &res.Logo)
 
 	return res
 }
@@ -203,14 +203,14 @@ func readTeamStats(db *sql.DB, id int) TeamStats {
 
 func teams(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		query := "select * from Team"
+		query := "select * from Teams"
 		queryRows, _ := db.Query(query)
 		defer queryRows.Close()
 
 		var teams []Team
 		for queryRows.Next() {
 			var team Team
-			queryRows.Scan(&team.Id, &team.Name, &team.Abbrev)
+			queryRows.Scan(&team.Id, &team.Name, &team.Abbrev, &team.Logo)
 			teams = append(teams, team)
 		}
 
@@ -286,16 +286,14 @@ func playerSearch(db *sql.DB) http.HandlerFunc {
 }
 
 func image(w http.ResponseWriter, r *http.Request) {
-	var req map[string]any
-	reqBody, _ := io.ReadAll(r.Body)
-	json.Unmarshal(reqBody, &req)
+	queries := r.URL.Query()
 
-	filePath := req["path"].(string)
+	filePath := queries["path"][0]
 	fileData, _ := os.ReadFile(filePath)
 
-	w.WriteHeader(http.StatusOK)
+	fmt.Println("hello", filePath)
+	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(fileData)
 }
 

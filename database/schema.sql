@@ -32,7 +32,7 @@ create type WicketMethod as enum ('BOWLED', 'CATCH', 'RUNOUT',
 create table if not exists Teams (
        id serial not null primary key,
        "name" varchar(50),
-       abbrev varchar(5)
+       abbrev varchar(5),
 
        logo varchar(100) not null default 'images/6.png'
 );
@@ -51,7 +51,7 @@ create table if not exists Players (
        dob date,
        "affinity" PlayerAffinity NOT NULL,
        battingAffinity BattingAffinity,
-       bowlingAffinity BowlingAffinity
+       bowlingAffinity BowlingAffinity,
 
        photo varchar(100) not null default 'images/6.png'
 );

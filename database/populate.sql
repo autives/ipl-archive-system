@@ -1,13 +1,13 @@
-insert into Teams("name", abbrev) values('Mumbai Indians', 'MI');
-insert into Teams("name", abbrev) values('Chennai Super Kings', 'CSK');
-insert into Teams("name", abbrev) values('Gujarat Titans', 'GT');
-insert into Teams("name", abbrev) values('Rajasthan Royals', 'RR');
-insert into Teams("name", abbrev) values('Sunrisers Hyderbad', 'SRH');
-insert into Teams("name", abbrev) values('Kolkata Knight Riders', 'KKR');
-insert into Teams("name", abbrev) values('Royal Challengers Bangalore', 'RCB');
-insert into Teams("name", abbrev) values('Lucknow Super Giants', 'LSG');
-insert into Teams("name", abbrev) values('Punjab Kings', 'PBKS');
-insert into Teams("name", abbrev) values('Delhi Capitals', 'DC');
+insert into Teams("name", abbrev, logo) values('Mumbai Indians', 'MI', 'images/mi.png');
+insert into Teams("name", abbrev, logo) values('Chennai Super Kings', 'CSK', 'images/csk.png');
+insert into Teams("name", abbrev, logo) values('Gujarat Titans', 'GT', 'images/gt.png');
+insert into Teams("name", abbrev, logo) values('Rajasthan Royals', 'RR', 'images/rr.png');
+insert into Teams("name", abbrev, logo) values('Sunrisers Hyderbad', 'SRH', 'images/srh.png');
+insert into Teams("name", abbrev, logo) values('Kolkata Knight Riders', 'KKR', 'images/kkr.png');
+insert into Teams("name", abbrev, logo) values('Royal Challengers Bangalore', 'RCB', 'images/rcb.png');
+insert into Teams("name", abbrev, logo) values('Lucknow Super Giants', 'LSG', 'images/lsg.png');
+insert into Teams("name", abbrev, logo) values('Punjab Kings', 'PBKS', 'images/pbks.png');
+insert into Teams("name", abbrev, logo) values('Delhi Capitals', 'DC', 'images/dc.png');
 
 
 

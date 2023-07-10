@@ -42,15 +42,29 @@ function Teams() {
   const [teamData, setTeamData] = useState([]);
   const [isErr, setIsErr] = useState("");
   const [isFetched, setIsFetched] = useState(false);
+  const [images, setImages] = useState({});
   // const { id } = useParams();
+
   useEffect(() => {
     const getTeamData = async () => {
       try {
-        // if(!playerData){
         const res = await axios.get(`/teams`);
-        setTeamData(res.data);
+        setTeamData(res.data["teams"]);
+        const imgPromises = res.data["teams"].map(async (team) => {
+          const resImage = await axios.get(`/image?path=${team.logo}`, {
+            responseType: "arraybuffer",
+          });
+          const imgBlob = new Blob([resImage.data], { type: "image/png" });
+          const imageObjectURL = URL.createObjectURL(imgBlob);
+
+          setImages((prevImages) => ({
+            ...prevImages,
+            [team.id]: imageObjectURL,
+          }));
+        });
+
+        await Promise.all(imgPromises);
         setIsFetched(true);
-        // }
       } catch (error) {
         if (error.response) {
           console.log(error.response.data);
@@ -58,7 +72,7 @@ function Teams() {
           console.log(error.response.header);
           setIsErr(error.message);
         } else {
-          console.log("Error : ${error.message}");
+          console.log("Error :"+`${error.message}`);
         }
       }
     };
@@ -69,12 +83,13 @@ function Teams() {
     <Container>
       {isFetched === true && (
         <TeamGrid>
-          {teamData.map((team) => (
-            <NavLink className="TeamCard" key={team.id} to={`/team/${team.id}`}>
+          {console.log(images)}
+          {teamData.map(team => (
+            <NavLink className="TeamCard" key={team.id} to={`/team/?id=${team.id}`}>
               <>
-                <TeamLogo src={team.logo} alt={team.name} />
+                <TeamLogo src={images[team.id]} alt={team.name} />
                 <h3 class="Name">{team.name}</h3>
-                <p class="Desc">{team.description}</p>
+                <h3 class="Desc">{"("+team.abbrev+")"}</h3>
               </>
             </NavLink>
           ))}
