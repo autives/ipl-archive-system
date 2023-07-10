@@ -33,6 +33,8 @@ create table if not exists Teams (
        id serial not null primary key,
        "name" varchar(50),
        abbrev varchar(5)
+
+       logo varchar(100) not null default 'images/6.png'
 );
 
 create table if not exists Innings (
@@ -51,6 +53,7 @@ create table if not exists Players (
        battingAffinity BattingAffinity,
        bowlingAffinity BowlingAffinity
 
+       photo varchar(100) not null default 'images/6.png'
 );
 
 create table if not exists Seasons (

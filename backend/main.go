@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 	"time"
 
 	"encoding/json"
@@ -12,14 +13,6 @@ import (
 
 	_ "github.com/lib/pq"
 )
-
-type DBEnv struct {
-	host     string
-	port     int
-	user     string
-	password string
-	dbname   string
-}
 
 type Player struct {
 	Id              int    `json:"id"`
@@ -153,12 +146,11 @@ func readBowlingStats(db *sql.DB, id int) BowlingStats {
 
 func player(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
 		res := make(map[string]any)
-		var req map[string]any
 
-		reqBody, _ := io.ReadAll(r.Body)
-		json.Unmarshal(reqBody, &req)
-		data := readPlayerData(db, req["player"].(string))
+		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
+		data := readPlayerDataFromID(db, int(id))
 
 		if data.Affinity == "BATSMAN" || data.Affinity == "ALL_ROUNDER" || data.Affinity == "WICKET_KEEPER_BATSMAN" {
 			res["battingStats"] = readBattingStats(db, data.Id)
@@ -169,6 +161,7 @@ func player(db *sql.DB) http.HandlerFunc {
 		}
 
 		w.Header().Set("content-type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		res["data"] = data
 
 		resBody, _ := json.Marshal(res)
@@ -176,10 +169,10 @@ func player(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func readTeamData(db *sql.DB, name string) Team {
+func readTeamData(db *sql.DB, id int) Team {
 	var res Team
 
-	query := fmt.Sprintf("select * from Teams where \"name\" = '%s'", name)
+	query := fmt.Sprintf("select * from Teams where id = '%d'", id)
 	team := db.QueryRow(query)
 	team.Scan(&res.Id, &res.Name, &res.Abbrev)
 
@@ -208,15 +201,36 @@ func readTeamStats(db *sql.DB, id int) TeamStats {
 	return stats
 }
 
+func teams(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := "select * from Team"
+		queryRows, _ := db.Query(query)
+		defer queryRows.Close()
+
+		var teams []Team
+		for queryRows.Next() {
+			var team Team
+			queryRows.Scan(&team.Id, &team.Name, &team.Abbrev)
+			teams = append(teams, team)
+		}
+
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		res := make(map[string]any)
+		res["teams"] = teams
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
+	}
+}
+
 func team(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req map[string]any
+		queries := r.URL.Query()
 		res := make(map[string]any)
 
-		reqBody, _ := io.ReadAll(r.Body)
-		json.Unmarshal(reqBody, &req)
-
-		team := readTeamData(db, req["team"].(string))
+		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
+		team := readTeamData(db, int(id))
 		stats := readTeamStats(db, team.Id)
 		var players []Player
 
@@ -235,6 +249,7 @@ func team(db *sql.DB) http.HandlerFunc {
 		res["players"] = players
 
 		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		resBody, _ := json.Marshal(res)
 		w.Write(resBody)
 	}
@@ -279,6 +294,7 @@ func image(w http.ResponseWriter, r *http.Request) {
 	fileData, _ := os.ReadFile(filePath)
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(fileData)
 }
@@ -299,5 +315,6 @@ func main() {
 	http.HandleFunc("/playerSearch", playerSearch(db))
 	http.HandleFunc("/team", team(db))
 	http.HandleFunc("/image", image)
+	http.HandleFunc("/teams", teams(db))
 	http.ListenAndServe(":8000", nil)
 }
