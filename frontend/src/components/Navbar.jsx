@@ -7,7 +7,7 @@ function Navbar() {
   const Nav = styled.nav`
     .navbar_list {
       display: flex;
-      gap: 5rem;
+      gap: 7rem;
       align-items: center;
       position: relative;
       li {
@@ -18,13 +18,31 @@ function Navbar() {
             display: inline-block;
             text-decoration: none;
             font-size: 1.8rem;
+            font-weight: 501;
             text-transform: uppercase;
+            opacity: 0.9;
             color: white;
             transition: color 0.3s linear;
           }
-          &:hover,
-          &:active {
+          &:hover {
             color: grey;
+          }
+          &.active {
+            color: white;
+            position: relative;
+            &:after {
+              content: "";
+              position: absolute;
+              left: 50%;
+              bottom: -5px;
+              width: 0;
+              height: 2px;
+              background-color: white;
+              transform: translateX(-50%);
+            }
+            &:after {
+              width: 100%;
+            }
           }
         }
       }

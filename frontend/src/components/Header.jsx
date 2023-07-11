@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import Navbar from "./Navbar";
 import { styled } from "styled-components";
-import SearchBar from "./SearchBar";
+// import SearchBar from "./SearchBar";
 import logo from "../images/logo.png";
 
 function Header() {
@@ -17,14 +17,15 @@ function Header() {
 }
 
 const Container = styled.div`
-  height: 6rem;
-  background-color:rgba(24, 24, 179, 0.7);
+  height: 7rem;
+  background-color:rgba(0, 0, 0, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
   .logo {
     height: auto;
     max-width: 55%;
+    opacity: 0.9;
   }
   overflow: auto;
 `;

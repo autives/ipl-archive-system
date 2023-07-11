@@ -33,24 +33,35 @@ const PlayerInfo = styled.div`
     justify-content: center;
     align-items: center;
     grid-template-columns: repeat(2, 1fr);
+    border-bottom: 2px solid grey;
+   
     > div:not(:last-child),
-    > h3 {
+    > h3:not(:last-child):not(:nth-last-child(2)){
         border-bottom: 2px solid grey;
         padding-top: .5rem;
         padding-bottom: .5rem;
         color: white;
     }
-    .PlayerName{
+    .PlayerName {
         max-width: 50rem;
-        // word-break: break-word;
-        grid-column:1/ span 2;
-    .Name {
-        font-size: 5rem;
-        color: white;
-        opacity: .75;
-        font-weight: 500;
-        text-transform : uppercase;
+        grid-column: 1 / span 2;
+    
+        .Name {
+          font-size: 5rem;
+          color: white;
+          opacity: 0.75;
+          font-weight: 500;
+          text-transform: uppercase;
+        };
+      
+      }
+      .Affinity {
+        max-width: 5rem;  
+        padding-top: .5rem;
+        padding-bottom: .5rem;
+        color: white;  
     }
+
 
 `
 
@@ -133,8 +144,6 @@ function Players() {
         setShowBatting(isBatting);
     };
     {isFetched && (console.log(playerData))}
-     //const unarrayPlayerData = playerData[0];
-    // console.log(unarrayPlayerData);
     return (
     <MainContainer>
     {isErr !== "" && <h2>{isErr}</h2>}

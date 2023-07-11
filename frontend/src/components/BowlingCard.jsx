@@ -26,34 +26,27 @@ const Player_stat = styled.div`
   }
 `;
 
-function BowlingCard() {
+function BowlingCard(props) {
+  const { bowlingStats } = props;
   return (
     <Player_stat>
       <div className="Title">
         <h2 className="Stat">Bowling Stats</h2>
       </div>
-      <h3>Innings Played:</h3>
-      <h3 className="Haina_hola">69</h3>
-      <h3>Total Runs:</h3>
-      <h3 className="Haina_hola">845</h3>
-      <h3>Balls Played:</h3>
-      <h3 className="Haina_hola">500</h3>
-      <h3>Strike Rate:</h3>
-      <h3 className="Haina_hola">169.56</h3>
-      <h3>Not outs:</h3>
-      <h3 className="Haina_hola">17</h3>
+      <h3>Innings:</h3>
+      <h3 className="Haina_hola">{bowlingStats.innings}</h3>
+      <h3>Runs:</h3>
+      <h3 className="Haina_hola">{bowlingStats.runs}</h3>
+      <h3>Wickets:</h3>
+      <h3 className="Haina_hola">{bowlingStats.wickets}</h3>
+      <h3>Maiden Overs:</h3>
+      <h3 className="Haina_hola">{bowlingStats.maidenOvers}</h3>
+      <h3>Extras:</h3>
+      <h3 className="Haina_hola">{bowlingStats.extras}</h3>
       <h3>Average:</h3>
-      <h3 className="Haina_hola">70</h3>
-      <h3 className="Milestone">50s:</h3>
-      <h3 className="Haina_hola">17</h3>
-      <h3 className="Milestone">100s:</h3>
-      <h3 className="Haina_hola">5</h3>
-      <h3>Sixes:</h3>
-      <h3 className="Haina_hola">70</h3>
-      <h3>Strike Rate:</h3>
-      <h3 className="Haina_hola">adgfasdlfk</h3>
-      <h3>Not Out:</h3>
-      <h3 className="Haina_hola">100</h3>
+      <h3 className="Haina_hola">{bowlingStats.average}</h3>
+      <h3>Economy:</h3>
+      <h3 className="Haina_hola">{bowlingStats.economy}</h3>
     </Player_stat>
   );
 }

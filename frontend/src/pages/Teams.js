@@ -12,6 +12,7 @@ const TeamGrid = styled.div`
   padding-top: 8rem;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+  opacity: 0.9;
   grid-gap: 4rem;
   .TeamCard {
     width: 30rem;
