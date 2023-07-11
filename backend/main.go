@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,7 +12,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 type Player struct {
@@ -122,6 +125,30 @@ func readBattingStats(db *sql.DB, id int) BattingStats {
 	return stats
 }
 
+func getEnum(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
+
+		query := fmt.Sprintf("select unnest(enum_range(NULL::%s)) as enum", queries["enum"][0])
+		enum, err := db.Query(query)
+		if err != nil {
+			panic(err)
+		}
+
+		var res []string
+		for enum.Next() {
+			var name string
+			enum.Scan(&name)
+			res = append(res, name)
+		}
+
+		w.Header().Set("content-type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
+	}
+}
+
 func readBowlingStats(db *sql.DB, id int) BowlingStats {
 	var stats BowlingStats
 
@@ -168,6 +195,41 @@ func player(db *sql.DB) http.HandlerFunc {
 
 		resBody, _ := json.Marshal(res)
 		w.Write(resBody)
+	}
+}
+
+func addPlayer(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.ParseMultipartForm(1024 * 1024 * 5)
+
+		var p Player
+		p.Name = r.FormValue("name")
+		age, _ := strconv.ParseInt(r.FormValue("age"), 10, 32)
+		p.Age = int(age)
+		p.Country = r.FormValue("country")
+		p.Affinity = r.FormValue("playerAffinity")
+		p.BattingAffinity = r.FormValue("battingAffinity")
+		p.BowlingAffinity = r.FormValue("bowlingAffinity")
+
+		dob := time.Now().AddDate(-int(p.Age), 0, 0)
+		y, m, d := dob.Date()
+		query := fmt.Sprintf("insert into Players(\"name\", country, dob, \"affinity\", battingAffinity, bowlingAffinity) values('%s', '%s', date('%d %s %d'), '%s', '%s', '%s') returning id", p.Name, p.Country, y, m, d, p.Affinity, p.BattingAffinity, p.BowlingAffinity)
+		db.QueryRow(query).Scan(&p.Id)
+
+		file, _, _ := r.FormFile("image")
+		defer file.Close()
+
+		fileName := fmt.Sprintf("images/%d.png", p.Id)
+		f, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
+		defer f.Close()
+
+		fmt.Println(fileName)
+
+		io.Copy(f, file)
+		db.Exec(fmt.Sprintf("update players set photo = '%s' where id = %d", fileName, p.Id))
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("content-type", "application/json")
 	}
 }
 
@@ -293,7 +355,6 @@ func image(w http.ResponseWriter, r *http.Request) {
 	filePath := queries["path"][0]
 	fileData, _ := os.ReadFile(filePath)
 
-	fmt.Println("hello", filePath)
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(fileData)
@@ -311,10 +372,16 @@ func main() {
 	}
 	defer db.Close()
 
-	http.HandleFunc("/player", player(db))
-	http.HandleFunc("/playerSearch", playerSearch(db))
-	http.HandleFunc("/team", team(db))
-	http.HandleFunc("/image", image)
-	http.HandleFunc("/teams", teams(db))
-	http.ListenAndServe(":8000", nil)
+	handler := mux.NewRouter()
+
+	handler.HandleFunc("/player", player(db))
+	handler.HandleFunc("/playerSearch", playerSearch(db))
+	handler.HandleFunc("/team", team(db))
+	handler.HandleFunc("/image", image)
+	handler.HandleFunc("/teams", teams(db))
+	handler.HandleFunc("/getEnum", getEnum(db))
+	handler.HandleFunc("/addPlayer", addPlayer(db))
+
+	c := cors.AllowAll().Handler(handler)
+	http.ListenAndServe(":8000", c)
 }
