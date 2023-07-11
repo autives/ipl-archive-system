@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"encoding/json"
@@ -21,6 +22,7 @@ type Player struct {
 	Affinity        string `json:"affinity"`
 	BattingAffinity string `json:"battingAffinity"`
 	BowlingAffinity string `json:"bowlingAffinity"`
+	Photo           string `json:"photo"`
 }
 
 type BattingStats struct {
@@ -68,7 +70,7 @@ func readPlayerData(db *sql.DB, name string) Player {
 
 	query := fmt.Sprintf("select * from Players where \"name\"= '%s'", name)
 	player := db.QueryRow(query)
-	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity)
+	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity, &res.Photo)
 
 	res.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
 	return res
@@ -80,7 +82,7 @@ func readPlayerDataFromID(db *sql.DB, id int) Player {
 
 	query := fmt.Sprintf("select * from Players where id= %d", id)
 	player := db.QueryRow(query)
-	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity)
+	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity, &res.Photo)
 
 	res.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
 	return res
@@ -262,7 +264,7 @@ func playerSearch(db *sql.DB) http.HandlerFunc {
 		var player Player
 		var players []Player
 		var dob time.Time
-		query := fmt.Sprintf("select * from Players where \"name\" like '%%%s%%'", queries["name"][0])
+		query := fmt.Sprintf("select * from Players where LOWER(\"name\") like '%%%s%%'", strings.ToLower(queries["name"][0]))
 
 		p, err := db.Query(query)
 		if err != nil {
@@ -271,7 +273,7 @@ func playerSearch(db *sql.DB) http.HandlerFunc {
 		defer p.Close()
 
 		for p.Next() {
-			p.Scan(&player.Id, &player.Name, &player.Country, &dob, &player.Affinity, &player.BattingAffinity, &player.BowlingAffinity)
+			p.Scan(&player.Id, &player.Name, &player.Country, &dob, &player.Affinity, &player.BattingAffinity, &player.BowlingAffinity, &player.Photo)
 			player.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
 			players = append(players, player)
 		}
