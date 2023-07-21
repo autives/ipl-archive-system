@@ -19,7 +19,7 @@ const Player_stat = styled.div`
     text-align: left;
   }
   .Haina_hola {
-    padding: 0rem 0rem 0rem 4rem;
+    padding: 1rem 0rem 1rem 4rem;
   }
   .Milestone {
     text-transform: lowercase;

@@ -3,6 +3,17 @@ import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 import axios from "./Axios";
 
+const Container = styled.div`
+    display: flex;
+    justify-items: flex-start;
+    form {
+        .height {
+            height: 5rem;
+            text-size: 3rem;
+        }
+    }
+`
+
 function  PlayerForm () {
     const [name, setName] = useState("");
     const [age, setAge] = useState(25);
@@ -76,34 +87,43 @@ function  PlayerForm () {
     
 
     return (isFetched === true && (
+        <Container>
         <form>
-            <input
+            <input className="height"
                 value={name}
                 onChange={e => setName(e.target.value)}
             />
             <input
+                className="height"
                 value={country}
                 onChange={e => setCountry(e.target.value)}
             />
             <input
+                className="height"
                 value={age}
                 onChange={e => setAge(e.target.value)}
                 type="number"
             />
 
-            <select value={playerType} onChange={e => setPlayerType(e.target.value)}>
+            <select  
+                className="height"
+                value={playerType} onChange={e => setPlayerType(e.target.value)}>
                 {enums.PlayerAffinity.map(aff => (
                     <option value={aff}>{aff}</option>
                 ))}
             </select>
 
-            <select value={battingType} onChange={e => setBattingType(e.target.value)}>
+            <select 
+                className="height"
+                value={battingType} onChange={e => setBattingType(e.target.value)}>
                 {enums.BattingAffinity.map(aff => (
                     <option value={aff}>{aff}</option>
                 ))}
             </select>
 
-            <select value={bowlingType} onChange={e => setBowlingType(e.target.value)}>
+            <select
+                className="height"
+                value={bowlingType} onChange={e => setBowlingType(e.target.value)}>
                 {enums.BowlingAffinity.map(aff => (
                     <option value={aff}>{aff}</option>
                 ))}
@@ -112,11 +132,16 @@ function  PlayerForm () {
             <input type="file"
                 onChange={e => setImage(e.target.files[0])}
             />
-            <img src={imageUrl} />
+            <img
+                className="height"
+                src={imageUrl} />
 
-            <button onClick={handleSubmit}>Submit</button>
+            <button 
+                className="height"
+                onClick={handleSubmit}>Submit</button>
 
         </form>
+        </Container>
         
     ));
 }

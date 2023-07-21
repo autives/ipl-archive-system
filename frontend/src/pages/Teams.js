@@ -12,7 +12,7 @@ const TeamGrid = styled.div`
   padding-top: 8rem;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  opacity: 0.9;
+  opacity: 0.85;
   grid-gap: 4rem;
   .TeamCard {
     width: 30rem;
@@ -55,7 +55,7 @@ function Teams() {
           const resImage = await axios.get(`/image?path=${team.logo}`, {
             responseType: "arraybuffer",
           });
-          const imgBlob = new Blob([resImage.data], { type: "image/png" });
+          const imgBlob = new Blob([resImage.data], { type: "image/png" });asdfha
           const imageObjectURL = URL.createObjectURL(imgBlob);
 
           setImages((prevImages) => ({
