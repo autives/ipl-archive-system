@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -67,16 +68,9 @@ type TeamStats struct {
 	SeasonsWon    int `json:"seasonsWon"`
 }
 
-func readPlayerData(db *sql.DB, name string) Player {
-	var res Player
-	var dob time.Time
-
-	query := fmt.Sprintf("select * from Players where \"name\"= '%s'", name)
-	player := db.QueryRow(query)
-	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity, &res.Photo)
-
-	res.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
-	return res
+func httpWriteError(w http.ResponseWriter, str string) {
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(str))
 }
 
 func readPlayerDataFromID(db *sql.DB, id int) Player {
@@ -91,28 +85,44 @@ func readPlayerDataFromID(db *sql.DB, id int) Player {
 	return res
 }
 
-func readBattingStats(db *sql.DB, id int) BattingStats {
+func readBattingStats(db *sql.DB, id int) (BattingStats, error) {
 	var stats BattingStats
+	var err error
 
 	query := fmt.Sprintf("select sum(runs) as runs, sum(fours) as fours, sum(sixes) as sixes, sum(ballPlayed) as balls from BattingInnings where playerId = %d", id)
 	queryRowRes := db.QueryRow(query)
-	queryRowRes.Scan(&stats.Runs, &stats.Sixes, &stats.Fours, &stats.Balls)
+	err = queryRowRes.Scan(&stats.Runs, &stats.Sixes, &stats.Fours, &stats.Balls)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(inningsId) from BattingInnings where playerId = %d", id)
 	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.Innings)
+	err = queryRowRes.Scan(&stats.Innings)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and runs > 50", id)
 	queryRowRes = db.QueryRow(query)
 	queryRowRes.Scan(&stats.Fifties)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and runs > 100", id)
 	queryRowRes = db.QueryRow(query)
 	queryRowRes.Scan(&stats.Centuries)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and \"out\" is null", id)
 	queryRowRes = db.QueryRow(query)
 	queryRowRes.Scan(&stats.NotOut)
+	if err != nil {
+		return stats, err
+	}
 
 	if stats.Balls > 0 {
 		stats.StrikeRate = float32(stats.Runs * 100.0 / stats.Balls)
@@ -122,7 +132,7 @@ func readBattingStats(db *sql.DB, id int) BattingStats {
 		stats.Average = float32(float32(stats.Runs) / float32(stats.Innings))
 	}
 
-	return stats
+	return stats, nil
 }
 
 func getEnum(db *sql.DB) http.HandlerFunc {
@@ -149,16 +159,22 @@ func getEnum(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func readBowlingStats(db *sql.DB, id int) BowlingStats {
+func readBowlingStats(db *sql.DB, id int) (BowlingStats, error) {
 	var stats BowlingStats
 
 	query := fmt.Sprintf("select count(inningsId) as innings, sum(runs) as runs, (sum(bowlsDelivered)/6) as overs, sum(wicketsTaken) as wickets, (sum(wides) + sum(noBalls) + sum(legBy) + sum(\"by\")) as extras, sum(maidenOvers) as maidenOvers from BowlingInnings where playerId = %d", id)
 	queryRowRes := db.QueryRow(query)
-	queryRowRes.Scan(&stats.Innings, &stats.Runs, &stats.Overs, &stats.Wickets, &stats.Extras, &stats.MaidenOvers)
+	err := queryRowRes.Scan(&stats.Innings, &stats.Runs, &stats.Overs, &stats.Wickets, &stats.Extras, &stats.MaidenOvers)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(inningsId) from BowlingInnings where playerId = %d", id)
 	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.Innings)
+	err = queryRowRes.Scan(&stats.Innings)
+	if err != nil {
+		return stats, err
+	}
 
 	if stats.Wickets == 0 {
 		stats.Average = stats.Runs
@@ -170,7 +186,7 @@ func readBowlingStats(db *sql.DB, id int) BowlingStats {
 		stats.Economy = stats.Runs / stats.Overs
 	}
 
-	return stats
+	return stats, nil
 }
 
 func player(db *sql.DB) http.HandlerFunc {
@@ -181,12 +197,20 @@ func player(db *sql.DB) http.HandlerFunc {
 		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
 		data := readPlayerDataFromID(db, int(id))
 
+		res["battingStats"] = nil
+		res["bowlingStats"] = nil
 		if data.Affinity == "BATSMAN" || data.Affinity == "ALL_ROUNDER" || data.Affinity == "WICKET_KEEPER_BATSMAN" {
-			res["battingStats"] = readBattingStats(db, data.Id)
+			battingStats, err := readBattingStats(db, data.Id)
+			if err != nil {
+				res["battingStats"] = battingStats
+			}
 		}
 
 		if data.Affinity == "ALL_ROUNDER" || data.Affinity == "BOWLER" {
-			res["bowlingStats"] = readBowlingStats(db, data.Id)
+			bowlingStats, err := readBowlingStats(db, data.Id)
+			if err != nil {
+				res["bowlingStats"] = bowlingStats
+			}
 		}
 
 		w.Header().Set("content-type", "application/json")
@@ -198,38 +222,106 @@ func player(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func addPlayer(db *sql.DB) http.HandlerFunc {
+func addPlayer(db *sql.DB, r *http.Request) error {
+	var p Player
+	age, _ := strconv.ParseInt(r.FormValue("age"), 10, 32)
+
+	p.Name = r.FormValue("name")
+	p.Age = int(age)
+	p.Country = r.FormValue("country")
+	p.Affinity = r.FormValue("playerAffinity")
+	p.BattingAffinity = r.FormValue("battingAffinity")
+	p.BowlingAffinity = r.FormValue("bowlingAffinity")
+
+	dob := time.Now().AddDate(-int(p.Age), 0, 0)
+	y, m, d := dob.Date()
+	query := fmt.Sprintf("insert into Players(\"name\", country, dob, \"affinity\", battingAffinity, bowlingAffinity) values('%s', '%s', date('%d %s %d'), '%s', '%s', '%s') returning id", p.Name, p.Country, y, m, d, p.Affinity, p.BattingAffinity, p.BowlingAffinity)
+
+	err := db.QueryRow(query).Scan(&p.Id)
+	if err != nil {
+		return err
+	}
+
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	fileName := fmt.Sprintf("images/players/%d.png", p.Id)
+	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	io.Copy(f, file)
+	_, err = db.Exec(fmt.Sprintf("update players set photo = '%s' where id = %d", fileName, p.Id))
+
+	return err
+}
+
+func addTeam(db *sql.DB, r *http.Request) error {
+	var t Team
+	t.Name = r.FormValue("name")
+	t.Abbrev = r.FormValue("abbrev")
+
+	query := fmt.Sprintf("insert into Teams(\"name\", abbrev) values('%s', '%s') returning id", t.Name, t.Abbrev)
+	err := db.QueryRow(query).Scan(&t.Id)
+	if err != nil {
+		return err
+	}
+
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	fileName := fmt.Sprintf("images/teams/%d.png", t.Id)
+	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	io.Copy(f, file)
+	_, err = db.Exec(fmt.Sprintf("update teams set logo = '%s' where id = %d", fileName, t.Id))
+
+	return err
+}
+
+func addOwner(db *sql.DB, r *http.Request) error {
+	return nil
+}
+
+func addBattingInning(db *sql.DB, r *http.Request) error {
+	return nil
+}
+
+func insert(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(1024 * 1024 * 5)
 
-		var p Player
-		p.Name = r.FormValue("name")
-		age, _ := strconv.ParseInt(r.FormValue("age"), 10, 32)
-		p.Age = int(age)
-		p.Country = r.FormValue("country")
-		p.Affinity = r.FormValue("playerAffinity")
-		p.BattingAffinity = r.FormValue("battingAffinity")
-		p.BowlingAffinity = r.FormValue("bowlingAffinity")
+		var err error
+		switch r.FormValue("table") {
+		case "players":
+			err = addPlayer(db, r)
+		case "teams":
+			err = addTeam(db, r)
+		case "owners":
+			err = addOwner(db, r)
+		case "battingInning":
+			err = addBattingInning(db, r)
+		default:
+			err = errors.New("invalid table")
+		}
 
-		dob := time.Now().AddDate(-int(p.Age), 0, 0)
-		y, m, d := dob.Date()
-		query := fmt.Sprintf("insert into Players(\"name\", country, dob, \"affinity\", battingAffinity, bowlingAffinity) values('%s', '%s', date('%d %s %d'), '%s', '%s', '%s') returning id", p.Name, p.Country, y, m, d, p.Affinity, p.BattingAffinity, p.BowlingAffinity)
-		db.QueryRow(query).Scan(&p.Id)
-
-		file, _, _ := r.FormFile("image")
-		defer file.Close()
-
-		fileName := fmt.Sprintf("images/%d.png", p.Id)
-		f, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
-		defer f.Close()
-
-		fmt.Println(fileName)
-
-		io.Copy(f, file)
-		db.Exec(fmt.Sprintf("update players set photo = '%s' where id = %d", fileName, p.Id))
-
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("content-type", "application/json")
+		if err != nil {
+			httpWriteError(w, err.Error())
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 	}
 }
 
@@ -243,26 +335,39 @@ func readTeamData(db *sql.DB, id int) Team {
 	return res
 }
 
-func readTeamStats(db *sql.DB, id int) TeamStats {
+func readTeamStats(db *sql.DB, id int) (TeamStats, error) {
 	var stats TeamStats
+	var err error
 
 	query := fmt.Sprintf("select count(id) as gamesPlayed, count(distinct seasonNo) as seasonsPlayed from Games where team1 = %d or team2 = %d", id, id)
 	queryRowRes := db.QueryRow(query)
-	queryRowRes.Scan(&stats.GamesPlayed, stats.SeasonsPlayed)
+	err = queryRowRes.Scan(&stats.GamesPlayed, stats.SeasonsPlayed)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(id) as gamesWon from Games where winner = %d", id)
 	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.GamesWon)
+	err = queryRowRes.Scan(&stats.GamesWon)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(winner) as count from Seasons where winner = %d", id)
 	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.SeasonsWon)
+	err = queryRowRes.Scan(&stats.SeasonsWon)
+	if err != nil {
+		return stats, err
+	}
 
 	query = fmt.Sprintf("select count(playerId) as playerCount from MemberOf where teamId = %d", id)
 	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.PlayerCount)
+	err = queryRowRes.Scan(&stats.PlayerCount)
+	if err != nil {
+		return stats, err
+	}
 
-	return stats
+	return stats, nil
 }
 
 func teams(db *sql.DB) http.HandlerFunc {
@@ -295,7 +400,11 @@ func team(db *sql.DB) http.HandlerFunc {
 
 		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
 		team := readTeamData(db, int(id))
-		stats := readTeamStats(db, team.Id)
+		stats, err := readTeamStats(db, team.Id)
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
 		var players []Player
 
 		query := fmt.Sprintf("select playerId from MemberOf where teamId = %d", team.Id)
@@ -353,7 +462,11 @@ func image(w http.ResponseWriter, r *http.Request) {
 	queries := r.URL.Query()
 
 	filePath := queries["path"][0]
-	fileData, _ := os.ReadFile(filePath)
+	fileData, err := os.ReadFile(filePath)
+	if err != nil {
+		httpWriteError(w, err.Error())
+		return
+	}
 
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -380,7 +493,7 @@ func main() {
 	handler.HandleFunc("/image", image)
 	handler.HandleFunc("/teams", teams(db))
 	handler.HandleFunc("/getEnum", getEnum(db))
-	handler.HandleFunc("/addPlayer", addPlayer(db))
+	handler.HandleFunc("/insert", insert(db))
 
 	c := cors.AllowAll().Handler(handler)
 	http.ListenAndServe(":8000", c)
