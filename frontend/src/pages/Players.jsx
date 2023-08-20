@@ -79,7 +79,7 @@ const Right_box = styled.div`
     opacity : .7;
 `
 
-const Photos = styled.img`
+const Photo = styled.img`
     width : auto;
     height : 50rem;
     margin-left : auto;
@@ -115,26 +115,39 @@ function Players() {
     const [playerData, setPlayerData]= useState([]);
     const [isErr, setIsErr] = useState("");
     const [isFetched, setIsFetched] = useState(false);
+    const [image, setImage] = useState();
     const { id } = useParams();
     
     useEffect ( () => {
         const getPlayerData = async () => {
-        try{
-        // if(!playerData){
-        const res = await axios.get(`/player?id=${id}`); 
-        setPlayerData(res.data);
-        setIsFetched(true);
-        // }
-        } catch(error) {
-            if(error.response) {
-            console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.header);
-            setIsErr(error.message);
-            } else {
-                console.log('Error : ${error.message}')
+            try{
+                const res = await axios.get(`/player?id=${id}`); 
+                setPlayerData(res.data);
+                console.log(res.data)
+
+                const imgPromise = async () => {
+                    const resImage = await axios.get(`/image?path=${res.data.data["photo"]}`, {
+                    responseType: "arraybuffer",
+                    });
+                    const imgBlob = new Blob([resImage.data], { type: "image/png" });
+                    const imageObjectURL = URL.createObjectURL(imgBlob);
+        
+                    setImage(imageObjectURL);
+                };
+
+                imgPromise();
+                setIsFetched(true);
+            } catch(error) {
+                if(error.response) {
+                console.log(error.response.data);
+                console.log(error.response.status);
+                console.log(error.response.header);
+                setIsErr(error.message);
+                } else {
+                    console.log('Error :' + error.message)
+                }
             }
-        }
+            
         }
         getPlayerData();
     }, [id]);
@@ -150,17 +163,17 @@ function Players() {
     {isFetched && (
     <Container>
         <Left_box>
-            <Photos src = 'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/playerheadshot/ipl/284/14.png' alt="haina hola" />
+            <Photo src = {image} alt="haina hola" />
             <PlayerInfo>
             <div className= "PlayerName">
             <h2 className='Name'>{playerData.data.name}</h2>
             </div>
             <h3 className='Country'>Country:</h3>
             <h3 className='Country'>{playerData.data.country}</h3>
-            <h3 className='Age'>Age:</h3>
-            <h3 className='Age'>{playerData.data.age}</h3>
+            <h3 className='YOB'>YOB:</h3>
+            <h3 className='YOB'>{playerData.data.bYear}</h3>
             <h3 className='Affinity'>Role:</h3>
-            <h3 className='Affinity'>{playerData.data.affinity}</h3>
+            <h3 className='Affinity'>{playerData.data.playerAffinity}</h3>
             </PlayerInfo>
         </Left_box>
         <Right_box>

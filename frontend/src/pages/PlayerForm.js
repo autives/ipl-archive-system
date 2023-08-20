@@ -57,6 +57,7 @@ function  PlayerForm () {
         event.preventDefault();
         try {
             const data = new FormData();
+            data.append('table', 'players')
             data.append('name', name);
             data.append('age', age);
             data.append('country', country);
@@ -70,7 +71,7 @@ function  PlayerForm () {
                 'Content-Type': 'multipart/form-data',
                 'Access-Control-Allow-Origin': '*'
             };
-            const res = await axios.post('/addPlayer', data, {headers});
+            const res = await axios.post('/insert', data, {headers});
             console.log(res);
 
             // const res = await axios.post('/addPlayer', {name: "hello"});

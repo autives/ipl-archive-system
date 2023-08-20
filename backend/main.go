@@ -1,141 +1,287 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"io"
+	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
 
 type Player struct {
-	Id              int    `json:"id"`
-	Name            string `json:"name"`
-	Country         string `json:"country"`
-	Age             int    `json:"age"`
-	Affinity        string `json:"affinity"`
-	BattingAffinity string `json:"battingAffinity"`
-	BowlingAffinity string `json:"bowlingAffinity"`
-	Photo           string `json:"photo"`
-}
-
-type BattingStats struct {
-	Runs       int     `json:"runs"`
-	StrikeRate float32 `json:"strikeRate"`
-	Average    float32 `json:"average"`
-	Balls      int     `json:"balls"`
-	Sixes      int     `json:"sixes"`
-	Fours      int     `json:"fours"`
-	Innings    int     `json:"innings"`
-	Fifties    int     `json:"fifties"`
-	Centuries  int     `json:"centuries"`
-	NotOut     int     `json:"notOut"`
-}
-
-type BowlingStats struct {
-	Innings     int `json:"innings"`
-	Overs       int `json:"overs"`
-	Runs        int `json:"runs"`
-	MaidenOvers int `json:"maidenOvers"`
-	Wickets     int `json:"wickets"`
-	Extras      int `json:"extras"`
-	Average     int `json:"average"`
-	Economy     int `json:"economy"`
+	Id              int    `json:"id" sql-insert:"f" db:"id"`
+	Name            string `json:"name" db:"name"`
+	Country         string `json:"country" db:"country"`
+	BYear           int    `json:"bYear" db:"bYear"`
+	Affinity        string `json:"playerAffinity" db:"affinity"`
+	BattingAffinity string `json:"battingAffinity" db:"battingaffinity"`
+	BowlingAffinity string `json:"bowlingAffinity" db:"bowlingaffinity"`
+	Photo           string `json:"photo" db:"photo"`
 }
 
 type Team struct {
-	Id     int    `json:"id"`
-	Name   string `json:"name"`
-	Abbrev string `json:"abbrev"`
-	Logo   string `json:"logo"`
+	Id     int    `json:"id" sql-insert:"f" db:"id"`
+	Name   string `json:"name" db:"name"`
+	Abbrev string `json:"abbrev" db:"abbrev"`
+	Logo   string `json:"logo" db:"logo"`
+}
+
+type Seasons struct {
+	Num        int `json:"num" sql-insert:"f" db:"num"`
+	Winner     int `json:"winner" db:"winner"`
+	OrangeCap  int `json:"orangeCap" db:"orangecap"`
+	PurpleCap  int `json:"purpleCap" db:"purplecap"`
+	MostValued int `json:"mostValued" db:"mostvalued"`
+	FairPlay   int `json:"fairPlay" db:"fairplay"`
+}
+
+type Games struct {
+	Id       int `json:"id" sql-insert:"f" db:"id"`
+	Team1    int `json:"team1" db:"team1"`
+	Team2    int `json:"team2" db:"team2"`
+	GYear    int `json:"gYear" db:"gyear"`
+	GMonth   int `json:"gMonth" db:"gmonth"`
+	GDay     int `json:"gDay" db:"gday"`
+	TossWon  int `json:"tossWon" db:"tosswon"`
+	FirstBat int `json:"firstBat" db:"firstbat"`
+	Winner   int `json:"winner" db:"winner"`
+	Venue    int `json:"venue" db:"venue"`
+	Innings1 int `json:"innings1" db:"innings1"`
+	Innings2 int `json:"innings2" db:"innings2"`
+	SeasonNo int `json:"seasonNo" db:"seasonno"`
+}
+
+type Innings struct {
+	Id           int `json:"id" sql-insert:"f" db:"id"`
+	TotalRun     int `json:"totalRun" db:"totalrun"`
+	TotalWickets int `json:"totalWickets" db:"totalwickets"`
+	TotalBalls   int `json:"totalBalls" db:"totalballs"`
+}
+
+type BattingInnings struct {
+	PlayerId    int    `json:"playerId" db:"playerid"`
+	InningsId   int    `json:"inningsId" db:"inningsid"`
+	Order       int    `json:"order" db:"order"`
+	Runs        int    `json:"runs" db:"runs"`
+	BallsPlayed int    `json:"ballsPlayed" db:"ballsplayed"`
+	Sixes       int    `json:"sixes" db:"sixes"`
+	Fours       int    `json:"fours" db:"fours"`
+	DotsPlayed  int    `json:"dotsPlayed" db:"dotsplayed"`
+	Out         string `json:"out" db:"out"`
+}
+
+type BowlingInnings struct {
+	PlayerId       int `json:"playerId" db:"playerid"`
+	InningsId      int `json:"inningsId" db:"inningsid"`
+	BowlsDelivered int `json:"bowlsDeliverd" db:"bowlddelivered"`
+	MaidenOvers    int `json:"maidenOvers" db:"maidenovers"`
+	Runs           int `json:"runs" db:"runs"`
+	WicketsTaken   int `json:"wicketsTaken" db:"wicketstaken"`
+	Wides          int `json:"wides" db:"wides"`
+	NoBalls        int `json:"noBalls" db:"noballs"`
+	LegBy          int `json:"legBy" db:"legby"`
+	By             int `json:"by" db:"by"`
+}
+
+type Coach struct {
+	Id       int    `json:"id" sql-insert:"f" db:"id"`
+	Name     string `json:"name" db:"name"`
+	PlayerId int    `json:"playerId" db:"playerid"`
+}
+
+type Owner struct {
+	Id       int    `json:"id" sql-insert:"f" db:"id"`
+	Name     string `json:"name" db:"name"`
+	NetWorth int    `json:"netWorth" db:"networth"`
+}
+
+type MemberOf struct {
+	PlayerId int `json:"playerId" db:"playerid"`
+	TeamId   int `json:"teamId" db:"teamid"`
+	From     int `json:"from" db:"from"`
+	To       int `json:"to" db:"to"`
+	BoughtAt int `json:"boughtAt" db:"boughtat"`
+}
+
+type Coaches struct {
+	CoachId int    `json:"coachId" db:"coachid"`
+	TeamId  int    `json:"teamId" db:"teamid"`
+	From    int    `json:"from" db:"from"`
+	To      int    `json:"to" db:"to"`
+	Type    string `json:"type" db:"type"`
+}
+
+type Owns struct {
+	OwnerId int `json:"ownerId" db:"ownerid"`
+	TeamId  int `json:"teamId" db:"teamid"`
+	From    int `json:"from" db:"from"`
+	To      int `json:"to" db:"to"`
+}
+
+type Captaincy struct {
+	PlayerId int `json:"playerId" db:"playerid"`
+	TeamId   int `json:"teamId" db:"teamid"`
+	From     int `json:"from" db:"from"`
+	To       int `json:"to" db:"to"`
+}
+
+type Playoffs struct {
+	GameId  int
+	IsFinal bool
+	IsQual  bool
+	IsElim  bool
+}
+
+type BattingStats struct {
+	PlayerId   int     `json:"playerId" db:"playerid"`
+	Runs       int     `json:"runs" db:"runs"`
+	StrikeRate float32 `json:"strikeRate" db:"strikerate"`
+	Average    float32 `json:"average" db:"average"`
+	Balls      int     `json:"balls" db:"balls"`
+	Sixes      int     `json:"sixes" db:"sixes"`
+	Fours      int     `json:"fours" db:"fours"`
+	Innings    int     `json:"innings" db:"innings"`
+	Fifties    int     `json:"fifties" db:"fifties"`
+	Centuries  int     `json:"centuries" db:"centuries"`
+	NotOut     int     `json:"notOut" db:"notout"`
+}
+
+type BowlingStats struct {
+	PlayerId    int `json:"playerId" db:"playerid"`
+	Innings     int `json:"innings" db:"innings"`
+	Overs       int `json:"overs" db:"overs"`
+	Runs        int `json:"runs" db:"runs"`
+	MaidenOvers int `json:"maidenOvers" db:"maidenovers"`
+	Wickets     int `json:"wickets" db:"wickets"`
+	Extras      int `json:"extras" db:"extras"`
+	Average     int `json:"average" db:"average"`
+	Economy     int `json:"economy" db:"economy"`
 }
 
 type TeamStats struct {
-	GamesPlayed   int `json:"gamesPlayed"`
-	GamesWon      int `json:"gamesWon"`
-	PlayerCount   int `json:"playerCount"`
-	SeasonsPlayed int `json:"seasonsPlayed"`
-	SeasonsWon    int `json:"seasonsWon"`
+	TeamId        int `json:"teamId" db:"teamid"`
+	PlayerCount   int `json:"playerCount" db:"playercount"`
+	GamesPlayed   int `json:"gamesPlayed" db:"gamesplayed"`
+	SeasonsPlayed int `json:"seasonsPlayed" db:"seasonsplayed"`
+	GamesWon      int `json:"gamesWon" db:"gameswon"`
+	SeasonsWon    int `json:"seasonsWon" db:"seasonswon"`
 }
+
+type TableInfo struct {
+	TableName    string `json:"tableName" db:"table_name"`
+	ColumnName   string `json:"columnName" db:"column_name"`
+	DataType     string `json:"dataType" db:"data_type"`
+	ForeignTable string `json:"foreignTable" db:"foreign_table"`
+	IsSerial     int    `json:"isSerial" db:"isserial"`
+}
+
+var (
+	formats = map[reflect.Kind]string{
+		reflect.Int:    "%d",
+		reflect.String: "'%s'",
+	}
+)
 
 func httpWriteError(w http.ResponseWriter, str string) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Write([]byte(str))
 }
 
-func readPlayerDataFromID(db *sql.DB, id int) Player {
-	var res Player
-	var dob time.Time
+func genericInsertQuery(db *sqlx.DB, table string, cols interface{}) string {
+	val := reflect.ValueOf(cols).Elem()
 
-	query := fmt.Sprintf("select * from Players where id= %d", id)
-	player := db.QueryRow(query)
-	player.Scan(&res.Id, &res.Name, &res.Country, &dob, &res.Affinity, &res.BattingAffinity, &res.BowlingAffinity, &res.Photo)
+	var colNames, values strings.Builder
+	for i := 0; i < val.NumField(); i++ {
+		f := val.Type().Field(i)
+		if f.Tag.Get("sql-insert") == "f" {
+			continue
+		}
 
-	res.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
-	return res
+		colName := f.Tag.Get("db")
+		if colName == "" {
+			colName = f.Name
+		}
+
+		colNames.WriteString("\"" + colName + "\", ")
+		values.WriteString(fmt.Sprintf(formats[f.Type.Kind()], val.Field(i).Interface()) + ", ")
+	}
+	colStr := strings.TrimRight(colNames.String(), ", ")
+	valStr := strings.TrimRight(values.String(), ", ")
+
+	query := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s)", table, colStr, valStr)
+	return query
 }
 
-func readBattingStats(db *sql.DB, id int) (BattingStats, error) {
-	var stats BattingStats
-	var err error
-
-	query := fmt.Sprintf("select sum(runs) as runs, sum(fours) as fours, sum(sixes) as sixes, sum(ballPlayed) as balls from BattingInnings where playerId = %d", id)
-	queryRowRes := db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.Runs, &stats.Sixes, &stats.Fours, &stats.Balls)
-	if err != nil {
-		return stats, err
+func genericParseForm(r *http.Request, data interface{}) {
+	v := reflect.TypeOf(data)
+	if v.Kind() != reflect.Pointer {
+		fmt.Print(v.Kind())
+		log.Fatal("Must be a pointer")
 	}
 
-	query = fmt.Sprintf("select count(inningsId) from BattingInnings where playerId = %d", id)
-	queryRowRes = db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.Innings)
-	if err != nil {
-		return stats, err
-	}
+	val := reflect.ValueOf(data).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		f := val.Field(i)
+		got := r.FormValue(val.Type().Field(i).Tag.Get("json"))
 
-	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and runs > 50", id)
-	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.Fifties)
-	if err != nil {
-		return stats, err
+		if f.Kind() == reflect.Int {
+			goti, _ := strconv.ParseInt(got, 10, 32)
+			f.SetInt(goti)
+		} else if f.Kind() == reflect.Float32 {
+			gotf, _ := strconv.ParseFloat(got, 32)
+			f.SetFloat(gotf)
+		} else if f.Kind() == reflect.String {
+			f.SetString(got)
+		}
 	}
-
-	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and runs > 100", id)
-	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.Centuries)
-	if err != nil {
-		return stats, err
-	}
-
-	query = fmt.Sprintf("select count(runs) from BattingInnings where playerId = %d and \"out\" is null", id)
-	queryRowRes = db.QueryRow(query)
-	queryRowRes.Scan(&stats.NotOut)
-	if err != nil {
-		return stats, err
-	}
-
-	if stats.Balls > 0 {
-		stats.StrikeRate = float32(stats.Runs * 100.0 / stats.Balls)
-	}
-
-	if stats.Innings > 0 {
-		stats.Average = float32(float32(stats.Runs) / float32(stats.Innings))
-	}
-
-	return stats, nil
 }
 
-func getEnum(db *sql.DB) http.HandlerFunc {
+func readTable[V Player | Team | BattingStats | BowlingStats | TeamStats](db *sqlx.DB, table string, cond string) (V, error) {
+	query := "select * from " + table
+	if cond != "" {
+		query += " where " + cond
+	}
+
+	var res V
+	err := db.Get(&res, query)
+	fmt.Printf("Log [QUERY]: \"%s\"\n", query)
+
+	if err != nil {
+		fmt.Printf("Log [ERROR]: PSQL error on \"%s\": \"%s\"\n", query, err.Error())
+		return res, err
+	}
+	return res, nil
+}
+
+func readTableMultiRow[V Player | Team | BattingStats | BowlingStats | TeamStats | MemberOf | TableInfo](db *sqlx.DB, table string, cond string) ([]V, error) {
+	query := "select * from " + table
+	if cond != "" {
+		query += " where " + cond
+	}
+
+	var res []V
+	err := db.Select(&res, query)
+	fmt.Printf("Log [QUERY]: \"%s\"\n", query)
+
+	if err != nil {
+		fmt.Printf("Log [ERROR]: PSQL error on \"%s\": \"%s\"\n", query, err.Error())
+		return nil, err
+	}
+	return res, nil
+}
+
+func getEnum(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		queries := r.URL.Query()
 
@@ -159,56 +305,30 @@ func getEnum(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func readBowlingStats(db *sql.DB, id int) (BowlingStats, error) {
-	var stats BowlingStats
-
-	query := fmt.Sprintf("select count(inningsId) as innings, sum(runs) as runs, (sum(bowlsDelivered)/6) as overs, sum(wicketsTaken) as wickets, (sum(wides) + sum(noBalls) + sum(legBy) + sum(\"by\")) as extras, sum(maidenOvers) as maidenOvers from BowlingInnings where playerId = %d", id)
-	queryRowRes := db.QueryRow(query)
-	err := queryRowRes.Scan(&stats.Innings, &stats.Runs, &stats.Overs, &stats.Wickets, &stats.Extras, &stats.MaidenOvers)
-	if err != nil {
-		return stats, err
-	}
-
-	query = fmt.Sprintf("select count(inningsId) from BowlingInnings where playerId = %d", id)
-	queryRowRes = db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.Innings)
-	if err != nil {
-		return stats, err
-	}
-
-	if stats.Wickets == 0 {
-		stats.Average = stats.Runs
-	} else {
-		stats.Average = stats.Runs / stats.Wickets
-	}
-
-	if stats.Overs > 0 {
-		stats.Economy = stats.Runs / stats.Overs
-	}
-
-	return stats, nil
-}
-
-func player(db *sql.DB) http.HandlerFunc {
+func player(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		queries := r.URL.Query()
 		res := make(map[string]any)
 
 		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
-		data := readPlayerDataFromID(db, int(id))
+		data, err := readTable[Player](db, "Players", fmt.Sprintf("id = %d", id))
+		if err != nil {
+			httpWriteError(w, "Player not found.")
+			return
+		}
 
-		res["battingStats"] = nil
-		res["bowlingStats"] = nil
+		res["battingStats"] = BattingStats{}
+		res["bowlingStats"] = BowlingStats{}
 		if data.Affinity == "BATSMAN" || data.Affinity == "ALL_ROUNDER" || data.Affinity == "WICKET_KEEPER_BATSMAN" {
-			battingStats, err := readBattingStats(db, data.Id)
-			if err != nil {
+			battingStats, err := readTable[BattingStats](db, "BattingStats", fmt.Sprintf("playerId = %d", data.Id))
+			if err == nil {
 				res["battingStats"] = battingStats
 			}
 		}
 
 		if data.Affinity == "ALL_ROUNDER" || data.Affinity == "BOWLER" {
-			bowlingStats, err := readBowlingStats(db, data.Id)
-			if err != nil {
+			bowlingStats, err := readTable[BowlingStats](db, "BowlingStats", fmt.Sprintf("playerId = %d", data.Id))
+			if err == nil {
 				res["bowlingStats"] = bowlingStats
 			}
 		}
@@ -222,30 +342,125 @@ func player(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func addPlayer(db *sql.DB, r *http.Request) error {
+func teams(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		teams, err := readTableMultiRow[Team](db, "Teams", "")
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+		res := make(map[string][]Team)
+		res["teams"] = teams
+		resBody, _ := json.Marshal(res)
+
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Write(resBody)
+	}
+}
+
+func team(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
+		res := make(map[string]any)
+
+		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
+		team, err := readTable[Team](db, "Teams", fmt.Sprintf("id = %d", id))
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+
+		stats, err := readTable[TeamStats](db, "TeamStats", fmt.Sprintf("teamId = %d", id))
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+
+		membership, err := readTableMultiRow[MemberOf](db, "MemberOf", fmt.Sprintf("teamId = %d", team.Id))
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+
+		var players []Player
+		for _, member := range membership {
+			if member.To == 0 {
+				player, _ := readTable[Player](db, "Players", fmt.Sprintf("id = %d", member.PlayerId))
+				players = append(players, player)
+			}
+		}
+
+		res["data"] = team
+		res["stats"] = stats
+		res["players"] = players
+
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		resBody, _ := json.Marshal(res)
+		w.Write(resBody)
+	}
+}
+
+func playerSearch(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
+
+		players, err := readTableMultiRow[Player](db, "Players", fmt.Sprintf("LOWER(\"name\") like '%%%s%%'", strings.ToLower(queries["name"][0])))
+		if err != nil {
+			httpWriteError(w, err.Error())
+		}
+
+		res := make(map[string]any)
+		res["matches"] = players
+		resBody, _ := json.Marshal(res)
+
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Write(resBody)
+	}
+}
+
+func image(w http.ResponseWriter, r *http.Request) {
+	queries := r.URL.Query()
+
+	filePath := queries["path"][0]
+	fileData, err := os.ReadFile(filePath)
+	if err != nil {
+		httpWriteError(w, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(fileData)
+}
+
+func tableInfo(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		queries := r.URL.Query()
+
+		table, err := readTableMultiRow[TableInfo](db, "TableInfo", "table_name = "+strings.ToLower(queries["name"][0]))
+		if err != nil {
+			httpWriteError(w, err.Error())
+		}
+
+		resBody, _ := json.Marshal(table)
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Write(resBody)
+	}
+}
+
+func addPlayer(db *sqlx.DB, r *http.Request) error {
 	var p Player
-	age, _ := strconv.ParseInt(r.FormValue("age"), 10, 32)
-
-	p.Name = r.FormValue("name")
-	p.Age = int(age)
-	p.Country = r.FormValue("country")
-	p.Affinity = r.FormValue("playerAffinity")
-	p.BattingAffinity = r.FormValue("battingAffinity")
-	p.BowlingAffinity = r.FormValue("bowlingAffinity")
-
-	dob := time.Now().AddDate(-int(p.Age), 0, 0)
-	y, m, d := dob.Date()
-	query := fmt.Sprintf("insert into Players(\"name\", country, dob, \"affinity\", battingAffinity, bowlingAffinity) values('%s', '%s', date('%d %s %d'), '%s', '%s', '%s') returning id", p.Name, p.Country, y, m, d, p.Affinity, p.BattingAffinity, p.BowlingAffinity)
-
-	err := db.QueryRow(query).Scan(&p.Id)
+	genericParseForm(r, &p)
+	err := db.QueryRow(genericInsertQuery(db, r.FormValue("table"), &p) + "RETURNING \"id\"").Scan(&p.Id)
 	if err != nil {
 		return err
 	}
 
-	file, _, err := r.FormFile("image")
-	if err != nil {
-		return err
-	}
+	file, _, _ := r.FormFile("image")
 	defer file.Close()
 
 	fileName := fmt.Sprintf("images/players/%d.png", p.Id)
@@ -257,17 +472,13 @@ func addPlayer(db *sql.DB, r *http.Request) error {
 
 	io.Copy(f, file)
 	_, err = db.Exec(fmt.Sprintf("update players set photo = '%s' where id = %d", fileName, p.Id))
-
 	return err
 }
 
-func addTeam(db *sql.DB, r *http.Request) error {
+func addTeam(db *sqlx.DB, r *http.Request) error {
 	var t Team
-	t.Name = r.FormValue("name")
-	t.Abbrev = r.FormValue("abbrev")
-
-	query := fmt.Sprintf("insert into Teams(\"name\", abbrev) values('%s', '%s') returning id", t.Name, t.Abbrev)
-	err := db.QueryRow(query).Scan(&t.Id)
+	genericParseForm(r, &t)
+	err := db.QueryRow(genericInsertQuery(db, r.FormValue("table"), &t)).Scan(&t.Id)
 	if err != nil {
 		return err
 	}
@@ -291,15 +502,15 @@ func addTeam(db *sql.DB, r *http.Request) error {
 	return err
 }
 
-func addOwner(db *sql.DB, r *http.Request) error {
+func addOwner(db *sqlx.DB, r *http.Request) error {
 	return nil
 }
 
-func addBattingInning(db *sql.DB, r *http.Request) error {
+func addBattingInning(db *sqlx.DB, r *http.Request) error {
 	return nil
 }
 
-func insert(db *sql.DB) http.HandlerFunc {
+func insert(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(1024 * 1024 * 5)
 
@@ -325,165 +536,19 @@ func insert(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func readTeamData(db *sql.DB, id int) Team {
-	var res Team
-
-	query := fmt.Sprintf("select * from Teams where id = '%d'", id)
-	team := db.QueryRow(query)
-	team.Scan(&res.Id, &res.Name, &res.Abbrev, &res.Logo)
-
-	return res
-}
-
-func readTeamStats(db *sql.DB, id int) (TeamStats, error) {
-	var stats TeamStats
-	var err error
-
-	query := fmt.Sprintf("select count(id) as gamesPlayed, count(distinct seasonNo) as seasonsPlayed from Games where team1 = %d or team2 = %d", id, id)
-	queryRowRes := db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.GamesPlayed, stats.SeasonsPlayed)
-	if err != nil {
-		return stats, err
-	}
-
-	query = fmt.Sprintf("select count(id) as gamesWon from Games where winner = %d", id)
-	queryRowRes = db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.GamesWon)
-	if err != nil {
-		return stats, err
-	}
-
-	query = fmt.Sprintf("select count(winner) as count from Seasons where winner = %d", id)
-	queryRowRes = db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.SeasonsWon)
-	if err != nil {
-		return stats, err
-	}
-
-	query = fmt.Sprintf("select count(playerId) as playerCount from MemberOf where teamId = %d", id)
-	queryRowRes = db.QueryRow(query)
-	err = queryRowRes.Scan(&stats.PlayerCount)
-	if err != nil {
-		return stats, err
-	}
-
-	return stats, nil
-}
-
-func teams(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		query := "select * from Teams"
-		queryRows, _ := db.Query(query)
-		defer queryRows.Close()
-
-		var teams []Team
-		for queryRows.Next() {
-			var team Team
-			queryRows.Scan(&team.Id, &team.Name, &team.Abbrev, &team.Logo)
-			teams = append(teams, team)
-		}
-
-		w.Header().Set("content-type", "apllication/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		res := make(map[string]any)
-		res["teams"] = teams
-		resBody, _ := json.Marshal(res)
-		w.Write(resBody)
-	}
-}
-
-func team(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		queries := r.URL.Query()
-		res := make(map[string]any)
-
-		id, _ := strconv.ParseInt(queries["id"][0], 10, 32)
-		team := readTeamData(db, int(id))
-		stats, err := readTeamStats(db, team.Id)
-		if err != nil {
-			httpWriteError(w, err.Error())
-			return
-		}
-		var players []Player
-
-		query := fmt.Sprintf("select playerId from MemberOf where teamId = %d", team.Id)
-		queryRows, _ := db.Query(query)
-		defer queryRows.Close()
-
-		for queryRows.Next() {
-			var playerId int
-			queryRows.Scan(&playerId)
-			players = append(players, readPlayerDataFromID(db, playerId))
-		}
-
-		res["data"] = team
-		res["stats"] = stats
-		res["players"] = players
-
-		w.Header().Set("content-type", "apllication/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		resBody, _ := json.Marshal(res)
-		w.Write(resBody)
-	}
-}
-
-func playerSearch(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		queries := r.URL.Query()
-
-		var player Player
-		var players []Player
-		var dob time.Time
-		query := fmt.Sprintf("select * from Players where LOWER(\"name\") like '%%%s%%'", strings.ToLower(queries["name"][0]))
-
-		p, err := db.Query(query)
-		if err != nil {
-			panic(err)
-		}
-		defer p.Close()
-
-		for p.Next() {
-			p.Scan(&player.Id, &player.Name, &player.Country, &dob, &player.Affinity, &player.BattingAffinity, &player.BowlingAffinity, &player.Photo)
-			player.Age = int((time.Since(dob).Hours() / (24 * 365.0)))
-			players = append(players, player)
-		}
-
-		res := make(map[string]any)
-		w.Header().Set("content-type", "apllication/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		res["matches"] = players
-		resBody, _ := json.Marshal(res)
-		w.Write(resBody)
-	}
-}
-
-func image(w http.ResponseWriter, r *http.Request) {
-	queries := r.URL.Query()
-
-	filePath := queries["path"][0]
-	fileData, err := os.ReadFile(filePath)
-	if err != nil {
-		httpWriteError(w, err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Write(fileData)
-}
-
 func main() {
 	envFile, _ := os.ReadFile("../database/dbenv.json")
 	var dbEnv map[string]any
 	json.Unmarshal(envFile, &dbEnv)
 	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbEnv["host"].(string), int(dbEnv["port"].(float64)), dbEnv["user"].(string), dbEnv["password"].(string), dbEnv["dbname"].(string))
 
-	db, err := sql.Open("postgres", dbInfo)
+	db, err := sqlx.Open("postgres", dbInfo)
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
+
+	// genericInsert(db, "players", &Player{1, "ashutosh", "nepal", 2004, 3, "batting", "right_hand", "spin", "6.png"})
 
 	handler := mux.NewRouter()
 
@@ -494,6 +559,7 @@ func main() {
 	handler.HandleFunc("/teams", teams(db))
 	handler.HandleFunc("/getEnum", getEnum(db))
 	handler.HandleFunc("/insert", insert(db))
+	handler.HandleFunc("/tableInfor", tableInfo(db))
 
 	c := cors.AllowAll().Handler(handler)
 	http.ListenAndServe(":8000", c)

@@ -1,3 +1,8 @@
+drop view if exists BattingStats;
+drop view if exists BowlingStats;
+drop view if exists TeamStats;
+drop view if exists TableInfo;
+
 drop table if exists Playoffs;
 drop table if exists Captaincy;
 drop table if exists Owns;
@@ -41,14 +46,14 @@ create table if not exists Innings (
        id serial not null primary key,
        totalRun int not null,
        totalWickets int not null,
-       bowlsDelivered int not null
+       totalBalls int not null
 );
 
 create table if not exists Players (
        id serial not null primary key,
        "name" varchar(50) not null,
        country varchar(50) not null,
-       dob date,
+       "bYear" int,
        "affinity" PlayerAffinity NOT NULL,
        battingAffinity BattingAffinity,
        bowlingAffinity BowlingAffinity,
@@ -77,7 +82,9 @@ create table if not exists Games (
        id serial not null primary key,
        team1 int not null,
        team2 int not null,
-       playedOn date not null,
+       gYear int not null,
+       gMonth int not null,
+       gDay int not null,
        tossWon int not null,
        firstBat int not null,
        winner int,
@@ -102,8 +109,8 @@ create table if not exists Games (
 create table if not exists MemberOf (
        playerId int not null,
        teamId int not null,
-       "from" date not null,
-       "to" date,
+       "from" int not null,
+       "to" int not null default 0,
        boughtAt int,
 
        primary key (playerId, teamId),
@@ -121,8 +128,8 @@ create table if not exists Coach (
 create table if not exists Coaches (
        coachId int not null,
        teamId int not null,
-       "from" date not null,
-       "to" date,
+       "from" int not null,
+       "to" int,
        "type" CoachType,
 
        primary key (coachId, teamId, "from"),
@@ -136,7 +143,7 @@ create table if not exists BattingInnings (
        inningsId int not null,
        "order" int not null,
        runs int not null default 0,
-       ballPlayed int not null default 1,
+       ballsPlayed int not null default 1,
        sixes int not null default 0,
        fours int not null default 0,
        dotsPlayed int not null default 0,
@@ -175,8 +182,8 @@ create table if not exists Owner (
 create table if not exists Owns (
        ownerId int not null,
        teamId int not null,
-       "from" date,
-       "to" date,
+       "from" int,
+       "to" int,
 
        primary key (ownerId, teamId),
 
@@ -197,14 +204,106 @@ create table if not exists Captaincy (
 );
 
 create table if not exists Playoffs (
-       seasonNo int not null,
-       gameId int not null,
+       gameId int not null primary key,
        isFinal boolean not null default false,
        isQual boolean not null default false,
        isElim boolean not null default false,
 
-       primary key (seasonNo, gameId),
-
-       constraint fk_seacon foreign key (seasonNo) references Seasons(num),
        constraint fk_game foreign key (gameId) references Games(id)
 );
+
+
+create view BattingStats (
+       playerId, runs, strikeRate, average, balls, sixes, fours, innings, fifties, centuries, notOut
+) as 
+select
+       playerId,
+       sum(b.runs),
+       case when sum(b.ballsPlayed) > 0 then sum(b.runs)::float/sum(b.ballsPlayed) else 0 end,
+       case when count(b.inningsId) > 0 then sum(b.runs)::float/count(b.inningsId) else 0 end,
+       sum(b.ballsPlayed),
+       sum(b.sixes),
+       sum(b.fours),
+       count(b.inningsId),
+       sum(case when b.runs > 50 then 1 else 0 end),
+       sum(case when b.runs > 100 then 1 else 0 end),
+       sum(case when b.out is null then 1 else 0 end)
+from BattingInnings b
+group by playerId;
+
+
+create view BowlingStats (
+       playerId, innings, overs, runs, maidenOvers, wickets, extras, average, economy
+) as
+select 
+       b.playerId,
+       count(b.inningsId),
+       sum(b.bowlsDelivered) / 6,
+       sum(b.runs),
+       sum(b.maidenOvers),
+       sum(b.wicketsTaken),
+       sum(b.wides) + sum(b.noBalls) + sum(b.by) + sum(b.legBy),
+       sum(b.runs)::float / (case when sum(b.wicketsTaken) > 0 then sum(b.wicketsTaken) else 1 end),
+       case when sum(b.bowlsDelivered) > 5 then (sum(b.runs)::float / (sum(b.bowlsDelivered) / 6)) else 0 end
+from BowlingInnings b
+group by playerId;
+
+
+create view TeamStats (
+       teamId, playerCount, gamesPlayed, seasonsPlayed, gamesWon, seasonsWon
+) as
+select t0.id, coalesce(t1.playerCount, 0), coalesce((t2.gamesPlayed1 + t3.gamesPlayed2), 0) as gamesPlayed, coalesce((t2.seasonsPlayed1 + t3.seasonsPlayed2), 0) as seasonsPlayed, coalesce(t4.gamesWon, 0), coalesce(t5.seasonsWon, 0)
+from
+(((((
+       (select id
+        from Teams) t0
+
+left join
+       (select teamId, count(playerId) as playerCount
+        from MemberOf
+        group by teamId) t1
+on id = teamId)
+
+left join
+       (select team1, count(id) as gamesPlayed1, count(distinct seasonNo) as seasonsPlayed1
+        from Games
+        group by team1) t2
+on teamId = team1)
+
+left join
+       (select team2, count(id) as gamesPlayed2, count(distinct seasonNo) as seasonsPlayed2
+        from Games
+        group by team2) t3
+on teamId = team2)
+
+left join 
+       (select winner as gwinner, count(winner) as gamesWon
+        from Games
+        group by winner) t4
+on teamId = gwinner)
+
+left join
+       (select winner as swinner, count(winner) as seasonsWon
+        from Seasons
+        group by winner) t5
+on teamId = swinner);
+
+
+create view TableInfo (
+       table_name, column_name, data_type, foreign_table, is_serial
+) as
+select 
+       c.table_name, 
+       c.column_name,
+       c.data_type,
+       (case when tc.constraint_type = 'FOREIGN KEY' then ccu.table_name end) as foreign_table,
+       (case when c.column_default like '%nextval%' then 1 else 0 end) as is_serial
+from 
+       information_schema.columns as c
+       left join information_schema.key_column_usage as kcu
+              on c.column_name = kcu.column_name
+              and c.table_name = kcu.table_name
+       left join information_schema.table_constraints as tc
+              on kcu.constraint_name = tc.constraint_name
+       left join information_schema.constraint_column_usage as ccu
+              on ccu.constraint_name = kcu.constraint_name
