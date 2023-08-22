@@ -12,6 +12,7 @@ import Header from "./components/Header";
 import Teams from "./pages/Teams";
 import Players from "./pages/Players";
 import Team from "./pages/Team";
+import Login from "./pages/Login";
 import PlayerForm from  "./pages/PlayerForm";
 import { ThemeProvider, styled } from "styled-components";
 import { GlobalStyle } from "./GlobalStyle";
@@ -25,9 +26,11 @@ const Overlay = styled.div`
   height: 100%;
   background-color: rgba(0, 0, 0, 0.6); /* Adjust the color and transparency as needed */
   z-index: -1;
+  overflow: auto;
 `
 
 function App() {
+
   const theme = {
     colors: {
       heading: "rgb(24, 24, 179)",
@@ -51,6 +54,7 @@ function App() {
           <Route path="/players/:id" element={<Players />} />
           <Route path="/team/:id" element={<Team />} />
           <Route path="/form" element={<PlayerForm />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
       </Overlay>

@@ -64,7 +64,6 @@ const PlayerInfo = styled.div`
 
 
 `
-
 const Right_box = styled.div`
     padding : 0rem 0rem 0rem 15rem;
     justify-content: center;
@@ -157,6 +156,10 @@ function Players() {
         setShowBatting(isBatting);
     };
     {isFetched && (console.log(playerData))}
+
+    const battingStats = playerData.battingStats || { runs :0, strikeRate :0, average : 0, balls :0, sixes :0, fours:0,innings:0, fifties:0,centuries : 0, notOut : 0};
+    const bowlingStats = playerData.bowlingStats || {innings:0,overs:0,runs:0,maidenOvers:0,wickets:0, extras:0,average:0,economy:0};
+
     return (
     <MainContainer>
     {isErr !== "" && <h2>{isErr}</h2>}
@@ -182,7 +185,7 @@ function Players() {
             <ToggleButton active = {!showBatting} onClick={() => toggleCard(false)} label="Bowling" />
         </ButtonContainer>
         <PlayerStat>
-        {(showBatting) ? <BattingCard battingStats={playerData.battingStats} /> : <BowlingCard bowlingStats={playerData.bowlingStats} />}
+        {(showBatting) ? <BattingCard battingStats={battingStats} /> : <BowlingCard bowlingStats={bowlingStats} />}
         </PlayerStat>
         </Right_box>
     </Container>

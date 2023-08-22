@@ -51,17 +51,16 @@ const SearchResults = styled.div`
   overflow-y: auto;
   margin-top: 5px;
   width: 20%;
-  height: 20rem;
-  overflow: auto;
   .SearchResultItem {
     background-color: white;
     color: black;
-    height: 4rem;
+    height: 4.2rem;
     padding: 1rem 0rem 0rem 3rem;
     font-size: 1.7rem;
     font-weight: 500;
     cursor: pointer;
     width: 100%;
+    border: 1px solid #ccc;
     &:hover {
       background-color: grey;
     }

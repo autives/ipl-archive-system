@@ -55,7 +55,7 @@ function Teams() {
           const resImage = await axios.get(`/image?path=${team.logo}`, {
             responseType: "arraybuffer",
           });
-          const imgBlob = new Blob([resImage.data], { type: "image/png" });
+          const imgBlob = new Blob([resImage.data], { type: "image/png" })
           const imageObjectURL = URL.createObjectURL(imgBlob);
 
           setImages((prevImages) => ({
@@ -84,12 +84,13 @@ function Teams() {
     <Container>
       {isFetched === true && (
         <TeamGrid>
+          {console.log(images)}
           {teamData.map(team => (
-            <NavLink className="TeamCard" key={team.id} to={`/team/?id=${team.id}`}>
+            <NavLink className="TeamCard" key={team.id} to={`/team/${team.id}`}>
               <>
                 <TeamLogo src={images[team.id]} alt={team.name} />
-                <h3 className="Name">{team.name}</h3>
-                <h3 className="Desc">{"("+team.abbrev+")"}</h3>
+                <h3 class="Name">{team.name}</h3>
+                <h3 class="Desc">{"("+team.abbrev+")"}</h3>
               </>
             </NavLink>
           ))}
