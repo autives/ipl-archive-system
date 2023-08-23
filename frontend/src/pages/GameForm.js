@@ -3,63 +3,104 @@ import styled from "styled-components";
 import axios from "./Axios";
 
 const Container = styled.div`
-    border: 3px solid #fff;
+    margin: 5px;
+    align-items: center;
+`;
+
+const TeamContainer = styled.div`
+    margin: 5px;
+    width: 100%;
+    float: left;
     padding: 20px;
-    overflow: auto;
+    border-radius: 10px;
+    border: 2px solid #000;
 `
+
+const FormContainer = styled.div`
+    margin: 20px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: auto;
+    overflow: auto;
+`;
 
 const ContainerChild = styled.div`
     width: 50%;
     float: left;
     padding: 20px;
-    border: 2px solid red;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `
 
-const Button = styled.button`
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-`;
-
-const Input = styled.input`
-    width: 70px;
+const InningContainer = styled.div`
+    width: 49%;
+    float: left;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    .tiny {
-        width:50px;
-    }
+    border-radius: 10px;
+    border: 2px solid #000;
+    margin: 5px;
+`
+
+const InlineDiv = styled.div`
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%
 `;
 
 const InputLarge = styled.input`
     width: 200px;
-    padding: 10px;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    .tiny {
-        width:50px;
-    }
+    margin: 10px;
 `;
 
 const Select = styled.select`
-    width: 150px;
-    padding: 10px;
+    padding: 5px;
+    width: 200px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    margin: 3px;
 `;
 
-const InlineDiv = styled.div`
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
+const Input = styled.input`
+    width: 100px;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 3px;
+`;
 
-    select,
-    input {
-        margin-right: 10px;
-    }
+const Button = styled.button`
+    padding: 5px 10px;
+    margin: 5px 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+`;
+
+const StyledButton = styled.button`
+  width: 100%;
+  padding: 10px;
+  background-color: rgba(200,100, 100,1);
+  color: white;
+  margin-top:1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const GameForm = () => {
@@ -67,16 +108,16 @@ const GameForm = () => {
     const [playingTeams, setPlayingTeams] = useState([]);
     const [playingTeamsData, setPlayingTeamsData] = useState([]);
     const [gameData, setGameData] = useState({
-        gYear: 2023, gMonth: 8, gDay: 25, tossWon: {}, firstBat: {}, winner: {}, venue: ""
+        gYear: null, gMonth: null, gDay: null, tossWon: {}, firstBat: {}, winner: {}, venue: ""
     });
     const [innings, setInnings] = useState([
         {
-            battingInnings: [{playerId: 0, runs: 0, balls: 0, sixes: 0, fours: 0, dotsPlayed: 0, out: 'BOWLED'}],
-            bowlingInnings: [{playerId: 0, balls: 0, maidenOvers: 0, runs: 0, wicketsTaken: 0, wides: 0, noBalls: 0, legBy: 0, by: 0}]
+            battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
+            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
         },
         {
-            battingInnings: [{playerId: 0, runs: 0, balls: 0, sixes: 0, fours: 0, dotsPlayed: 0, out: 'BOWLED'}],
-            bowlingInnings: [{playerId: 0, balls: 0, maidenOvers: 0, runs: 0, wicketsTaken: 0, wides: 0, noBalls: 0, legBy: 0, by: 0}]
+            battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
+            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
         }
     ]);
 
@@ -136,8 +177,8 @@ const GameForm = () => {
         const inningToUpdate = updatedInnings[inningIndex][inningType];
 
         const newInning = {
-            battingInnings: {playerId: 0, runs: 0, balls: 0, sixes: 0, fours: 0, dotsPlayed: 0, out: 'BOWLED'},
-            bowlingInnings: {playerId: 0, balls: 0, maidenOvers: 0, runs: 0, wicketsTaken: 0, wides: 0, noBalls: 0, legBy: 0, by: 0}
+            battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
+            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
         };
         inningToUpdate.push(newInning[inningType]);
         setInnings(updatedInnings);
@@ -172,8 +213,10 @@ const GameForm = () => {
         setGameData(updatedGameData);
     }
 
+    const handleSubmit = () => {}
+
     return ( teamList[0] &&
-        <Container>
+        <FormContainer>
             <h2>Multiple Inning Form</h2>
             
             <InlineDiv>
@@ -183,12 +226,13 @@ const GameForm = () => {
                     type='number'
                     min={1900}
                     max={2090}
+                    placeholder='Year'
                 />
                 <InputLarge 
                     value={gameData.gMonth}
                     onChange={e => handleGameDataChange("gMonth", e.target.value)}
                     type='number'
-                    
+                    placeholder='Month'
                     min={1}
                     max={12}
                 />
@@ -196,7 +240,7 @@ const GameForm = () => {
                     value={gameData.gDay}
                     onChange={e => handleGameDataChange("gDay", e.target.value)}
                     type='number'
-                    
+                    placeholder='Day'
                     min={1}
                     max={32}
                 />
@@ -206,13 +250,12 @@ const GameForm = () => {
                     placeholder='Venue'
                 />         
             </InlineDiv>
-            <Container>
+
+            <TeamContainer>
                 <ContainerChild>
-                    <label htmlFor='team1'>Team 1</label>
                     <Select
-                        id='team1'
                         value={playingTeams.length >= 1 && playingTeams[0] ? playingTeams[0].id : "select"} onChange={e => updatePlayingTeams(0, e.target.value)}>
-                        <option value="select">Select</option>
+                        <option value="select">Team 1</option>
                         {teamList[0].map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
@@ -220,28 +263,28 @@ const GameForm = () => {
                 </ContainerChild>
 
                 <ContainerChild>
-                    <label htmlFor='team2'>Team 2</label>
                     <Select
-                        id='team2'
                         value={playingTeams.length >= 2 && playingTeams[1] ? playingTeams[1].id : "select"} onChange={e => updatePlayingTeams(1, e.target.value)}>
-                        <option value="select">Select</option>
+                        <option value="select">Team 2</option>
                         {teamList[1].map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
                     </Select>
                 </ContainerChild>
-            </Container>
+            </TeamContainer>
 
-            {(playingTeams.length >= 2) && (<div>
+            {(playingTeams.length >= 2) && (
                 <InlineDiv>
                     <Select>
                         value={gameData.tossWon.id} onChange={e => handleGameDataChange('tossWon', e.target.value)}
+                        <option value="select">Toss Winner</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
                     </Select>
                     <Select>
                         value={gameData.firstBat.id} onChange={e => handleGameDataChange('firstBat', e.target.value)}
+                        <option value="select">First Batting</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
@@ -249,26 +292,26 @@ const GameForm = () => {
 
                     <Select>
                         value={gameData.winner.id} onChange={e => handleGameDataChange('winner', e.target.value)}
+                        <option value="select">Winner</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
                     </Select>
                 </InlineDiv>
-            </div>)}
+            )}
 
-            {innings.map((inning, inningIndex) => (
-                <ContainerChild>
+            {(playingTeams.length >= 2) && innings.map((inning, inningIndex) => (
+                <InningContainer>
                     {Object.keys(inning).map(key => (
-                        <div key={key}>
+                        <Container key={key}>
                             <h3>{key}</h3>
-
+                            <hr />
                             {inning[key].map((batorbowl, index) => (playingTeamsData[0] && playingTeamsData[1]) && (
                                 <Container>
-                                <p>{`${key}${index}`}</p>
-                                <InlineDiv key={`${key}${index}`}>
+                                <Container key={`${key}${index}`}>
                                     <Select  
                                         value={batorbowl.playerId} onChange={e => handleInputChange(inningIndex, key, index, "playerId", e.target.value)}>
-                                        <option value="select">Select</option>
+                                        <option value="select">Player</option>
                                         {playingTeamsData[inningIndex] && playingTeamsData[inningIndex].players && (
                                             playingTeamsData[inningIndex].players.map(player => (
                                                 <option key={player.id} value={player.id}>{player.name}</option>
@@ -280,29 +323,29 @@ const GameForm = () => {
                                         onChange={e => handleInputChange(inningIndex, key, index, "runs", e.target.value)}
                                         type='number'
                                         min={0}
-                                        
+                                        placeholder='Runs'
                                     />
                                     <Input 
                                         value={batorbowl.balls}
                                         onChange={e => handleInputChange(inningIndex, key, index, "balls", e.target.value)}
                                         type='number'
                                         min={0}
-                                        
+                                        placeholder='Balls'
                                     />
-                                    {key === 'battingInnings' && (<div>                                        
+                                    {key === 'battingInnings' && (<span>                                        
                                         <Input 
                                             value={batorbowl.sixes}
                                             onChange={e => handleInputChange(inningIndex, key, index, "sixes", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='Sixes'
                                         />
                                         <Input 
                                             value={batorbowl.fours}
                                             onChange={e => handleInputChange(inningIndex, key, index, "fours", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='Fours'
                                         />
                                         <Select  
                                             value={batorbowl.out} onChange={e => handleInputChange(inningIndex, key, index, "out", e.target.value)}>
@@ -310,63 +353,76 @@ const GameForm = () => {
                                                 <option value={method}>{method}</option>
                                             ))}
                                         </Select>                                     
-                                    </div>)}
-                                    {key === 'bowlingInnings' && (<div>
+                                    </span>)}
+                                    {key === 'bowlingInnings' && (<span>
                                         <Input 
                                             value={batorbowl.maidenOvers}
                                             onChange={e => handleInputChange(inningIndex, key, index, "maidenOvers", e.target.value)}
                                             min={0}
                                             type='number'
-                                            
+                                            placeholder='Maiden'
                                         />
                                         <Input 
                                             value={batorbowl.wicketsTaken}
                                             onChange={e => handleInputChange(inningIndex, key, index, "wicketsTaken", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='Wickets'
                                         />
                                         <Input 
                                             value={batorbowl.wides}
                                             onChange={e => handleInputChange(inningIndex, key, index, "wides", e.target.value)}
                                             min={0}
                                             type='number'
-                                            
+                                            placeholder='Wides'
                                         />
                                         <Input 
                                             value={batorbowl.noBalls}
                                             onChange={e => handleInputChange(inningIndex, key, index, "noBalls", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='No Balls'
                                         />
                                         <Input 
                                             value={batorbowl.legBy}
                                             onChange={e => handleInputChange(inningIndex, key, index, "legBy", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='Leg By'
                                         />
                                         <Input 
                                             value={batorbowl.by}
                                             onChange={e => handleInputChange(inningIndex, key, index, "by", e.target.value)}
                                             type='number'
                                             min={0}
-                                            
+                                            placeholder='By'
                                         />
-                                    </div>)}
+                                    </span>)}
                                     {(inning[key].length > 1) && (
-                                        <Button onClick={() => handleRemoveInning(inningIndex, key, index)}>-</Button>
+                                        <InlineDiv><Button onClick={() => handleRemoveInning(inningIndex, key, index)}>-</Button></InlineDiv>
                                     )}
-                                </InlineDiv>
+                                </Container>
+                                <hr />
                                 </Container>
                             ))}
-                            <Button onClick={() => handleAddInning(inningIndex, key)}>+</Button>
-                        </div>
+                            <InlineDiv>
+                                <Button onClick={() => handleAddInning(inningIndex, key)}>+</Button>
+                            </InlineDiv>
+                        <hr />
+                        </Container>
                     ))}
-                </ContainerChild>
+                </InningContainer>
             ))}
-        </Container>
+
+            {(innings[0]['battingInnings'][0].playerId !== 0 &&
+              innings[1]['battingInnings'][0].playerId !== 0 &&
+              innings[0]['bowlingInnings'][0].playerId !== 0 &&
+              innings[1]['bowlingInnings'][0].playerId !== 0) && (
+                <StyledButton onClick={handleSubmit}>
+                    Submit
+                </StyledButton>
+              )}
+        </FormContainer>
     );
 };
 
