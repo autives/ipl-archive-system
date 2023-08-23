@@ -18,7 +18,7 @@ const PageContainer = styled.div`
 
 const Welcome = styled.div`
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   opacity:1;
 `;
 
@@ -28,13 +28,12 @@ const Title = styled.h1`
   letter-spacing: 2px;
   margin-bottom: 1rem;
   font-weight: bold;
-
 `;
 
 const Subtitle = styled.p`
-  color: #546e7a;
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 0rem;
 `;
 
 const Home = () => {
