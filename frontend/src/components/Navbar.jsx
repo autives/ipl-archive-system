@@ -63,6 +63,11 @@ function Navbar() {
             </NavLink>
           </li>
           <li>
+            <NavLink className={"navbar_link"} to="/forms">
+              Forms
+            </NavLink>
+          </li>
+          <li>
             <NavLink className={"navbar_link"} to="/about">
               About
             </NavLink>

@@ -12,6 +12,7 @@ import Header from "./components/Header";
 import Teams from "./pages/Teams";
 import Players from "./pages/Players";
 import Team from "./pages/Team";
+import Forms from "./pages/Forms";
 import TeamForm from './pages/TeamForm';
 import PlayerForm from  "./pages/PlayerForm";
 import GameForm from "./pages/GameForm"
@@ -61,6 +62,7 @@ function App() {
           <Route path="/teamform" element={<TeamForm />} />
           <Route path="/playerform" element={<PlayerForm />} />
           <Route path="/teamform" element={<TeamForm />} />
+          <Route path="/forms" element={<Forms />} />
         </Routes>
       </BrowserRouter>
       </Overlay>
