@@ -14,6 +14,7 @@ import Players from "./pages/Players";
 import Team from "./pages/Team";
 import Login from "./pages/Login";
 import PlayerForm from  "./pages/PlayerForm";
+import GameForm from "./pages/GameForm"
 import { ThemeProvider, styled } from "styled-components";
 import { GlobalStyle } from "./GlobalStyle";
 
@@ -54,6 +55,7 @@ function App() {
           <Route path="/players/:id" element={<Players />} />
           <Route path="/team/:id" element={<Team />} />
           <Route path="/form" element={<PlayerForm />} />
+          <Route path="/gameform" element={<GameForm />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
