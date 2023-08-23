@@ -9,9 +9,9 @@ const Player_stat = styled.div`
   row-gap: 0.5rem;
   padding: 0.5rem 0rem 0.5rem 0rem;
   grid-template-columns: repeat(2, 1fr);
-  h3 {
-    padding: 0.25rem 0rem;
-  }
+  // h3 {
+    // padding: 0.25rem 0rem;
+  // }
   .Title {
     // max-width: 50rem;
     // word-break: break-word;

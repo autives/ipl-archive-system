@@ -24,7 +24,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Adjust the color and transparency as needed */
+  background-color: rgba(60, 60, 60, 1); /* Adjust the color and transparency as needed */
   z-index: -1;
   overflow: auto;
 `

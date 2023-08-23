@@ -8,6 +8,7 @@ export const GlobalStyle = createGlobalStyle`
     box-sizing : border-box;
     font-family: 'Work Sans', sans-serif;
 }
+
 body {
   background-image: url(${background});
   background-repeat: no-repeat;
@@ -27,7 +28,6 @@ h1 {
   background-color : auto;
   font-size : 5.6rem;
   font-weight : 700; 
-  opacity : .7;
 }
 
 h2 {

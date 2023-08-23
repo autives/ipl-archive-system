@@ -11,13 +11,13 @@ insert into Teams("name", abbrev, logo) values('Delhi Capitals', 'DC', 'images/d
 
 
 
-insert into Players("name", country, "bYear", "affinity", battingAffinity, bowlingAffinity) values('Suresh Raina', 'India', 1987, 'ALL_ROUNDER', 'LEFT_HANDED', 'LEFT_HAND_OFF_BREAK');
-insert into Players("name", country, "bYear", "affinity", battingAffinity, bowlingAffinity) values('Rohit Sharma', 'India', 1985, 'BATSMAN', 'RIGHT_HANDED', 'RIGHT_HAND_OFF_BREAK');
+insert into Players("name", country, "bYear", "affinity", battingAffinity, bowlingAffinity, photo) values('Suresh Raina', 'India', 1987, 'ALL ROUNDER', 'LEFT HANDED', 'LEFT HAND OFF BREAK','images/1.png');
+insert into Players("name", country, "bYear", "affinity", battingAffinity, bowlingAffinity, photo) values('Rohit Sharma', 'India', 1985, 'BATSMAN', 'RIGHT HANDED', 'RIGHT HAND OFF BREAK','images/6.png');
 
 insert into Seasons values (2021, 2, 1, 1, 1, 2);
 
-insert into MemberOf values(1, 2, 2007, 2021, 200000000);
-insert into MemberOf values(2, 2, 2013, 0, 1800000000);
+insert into MemberOf values(1, 2, 2007, 0, 200000000);
+insert into MemberOf values(2, 1, 2013, 0, 1800000000);
 
 insert into Innings(totalRun, totalWickets, totalBalls) values(200, 4, 99);
 insert into Innings(totalRun, totalWickets, totalBalls) values(199, 6, 120);

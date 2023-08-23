@@ -10,7 +10,7 @@ import { useParams } from 'react-router-dom';
 const MainContainer = styled.div`
     display : flex;
     justify-content : center;
-    background
+    padding-top:0rem;
 }
 `;
 
@@ -22,7 +22,7 @@ const Container = styled.div`
 `
 
 const Left_box = styled.div`
-    padding : 6rem 10rem 6rem 0rem;
+    padding : 3.2rem 10rem 6rem 0rem;
     justify-content: center;
     flex-direction : column;
     align-items: center;
@@ -44,8 +44,8 @@ const PlayerInfo = styled.div`
     }
     .PlayerName {
         max-width: 50rem;
+        min-width:30rem;
         grid-column: 1 / span 2;
-    
         .Name {
           font-size: 5rem;
           color: white;
