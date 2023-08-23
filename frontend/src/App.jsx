@@ -12,7 +12,7 @@ import Header from "./components/Header";
 import Teams from "./pages/Teams";
 import Players from "./pages/Players";
 import Team from "./pages/Team";
-import Login from "./pages/Login";
+import TeamForm from './pages/TeamForm';
 import PlayerForm from  "./pages/PlayerForm";
 import { ThemeProvider, styled } from "styled-components";
 import { GlobalStyle } from "./GlobalStyle";
@@ -53,8 +53,8 @@ function App() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/players/:id" element={<Players />} />
           <Route path="/team/:id" element={<Team />} />
-          <Route path="/form" element={<PlayerForm />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/playerform" element={<PlayerForm />} />
+          <Route path="/teamform" element={<TeamForm />} />
         </Routes>
       </BrowserRouter>
       </Overlay>

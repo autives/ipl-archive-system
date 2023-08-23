@@ -142,7 +142,7 @@ function SearchBar() {
       <Search ref={searchRef} onClick={() => setSelected(true)}>
         <FaSearch className="icon" id="search-icon" />
         <input
-          placeholder="Search by name"
+          placeholder="Search by player's name"
           value={searchTerm}
           onChange={handleInputChange}
           onKeyDown={handleKeyPress}

@@ -220,6 +220,7 @@ func genericInsertQuery(db *sqlx.DB, table string, cols interface{}) string {
 	valStr := strings.TrimRight(values.String(), ", ")
 
 	query := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s)", table, colStr, valStr)
+	fmt.Printf("Log [INSERT]: %s\n", query)
 	return query
 }
 
@@ -461,6 +462,15 @@ func addPlayer(db *sqlx.DB, r *http.Request) error {
 		return err
 	}
 
+	var member MemberOf
+	genericParseForm(r, &member)
+	member.PlayerId = p.Id
+	_, err = db.Exec(genericInsertQuery(db, "memberOf", &member))
+	fmt.Println("hello")
+	if err != nil {
+		return err
+	}
+
 	file, _, _ := r.FormFile("image")
 	defer file.Close()
 
@@ -479,12 +489,24 @@ func addPlayer(db *sqlx.DB, r *http.Request) error {
 func addTeam(db *sqlx.DB, r *http.Request) error {
 	var t Team
 	genericParseForm(r, &t)
-	err := db.QueryRow(genericInsertQuery(db, r.FormValue("table"), &t)).Scan(&t.Id)
+	err := db.QueryRow(genericInsertQuery(db, r.FormValue("table"), &t) + "RETURNING \"id\"").Scan(&t.Id)
 	if err != nil {
 		return err
 	}
 
-	file, _, err := r.FormFile("image")
+	owner := Owner{0, r.FormValue("owner"), 100000000}
+	err = db.QueryRow(genericInsertQuery(db, "owner", &owner) + "RETURNING \"id\"").Scan(&owner.Id)
+	if err != nil {
+		return err
+	}
+
+	owns := Owns{owner.Id, t.Id, 2004, 0}
+	_, err = db.Exec(genericInsertQuery(db, "owns", &owns))
+	if err != nil {
+		return err
+	}
+
+	file, _, err := r.FormFile("logo")
 	if err != nil {
 		return err
 	}
@@ -496,6 +518,7 @@ func addTeam(db *sqlx.DB, r *http.Request) error {
 		return err
 	}
 	defer f.Close()
+	fmt.Println(file)
 
 	io.Copy(f, file)
 	_, err = db.Exec(fmt.Sprintf("update teams set logo = '%s' where id = %d", fileName, t.Id))

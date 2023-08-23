@@ -30,12 +30,12 @@ const TeamPage = () => {
           setTeamImage(imageObjectURL);
         };
         imgPromiseTeam();
-        
+
         const imgPromisePlayers = res.data["players"].map(async (player) => {
           const resImage = await axios.get(`/image?path=${player.photo}`, {
             responseType: "arraybuffer",
           });
-          const imgBlob = new Blob([resImage.data], { type: "image/png" })
+          const imgBlob = new Blob([resImage.data], { type: "image/png" });
           const imageObjectURL = URL.createObjectURL(imgBlob);
 
           setPlayerImages((prevImages) => ({
@@ -43,8 +43,7 @@ const TeamPage = () => {
             [player.id]: imageObjectURL,
           }));
         });
-        await Promise.all(imgPromisePlayers);  
-        setIsFetched(true);
+        await Promise.all(imgPromisePlayers);
       } catch (error) {
         if (error.response) {
           console.log(error.response.data);
@@ -55,97 +54,95 @@ const TeamPage = () => {
           console.log("Error :" + error.message);
         }
       }
+      setIsFetched(true);
+
     };
     getTeamData();
   }, [id]);
-
+  console.log(isFetched);
   {
     isFetched && console.log(teamData);
   }
 
   return (
     <Container>
-     {isFetched && (
-      <TeamRow>
-        <TeamColumn>
-          <TeamHeader>
-            <TeamLogo
-              src={teamImage}
-              alt="Team Logo"
-            />
-            <TeamName>{teamData.data.name}</TeamName>
-          </TeamHeader>
-        </TeamColumn>
-        <TeamColumn>
-          <TeamStatsCard
-          >
-            <CardContent>
-            <StatTitle>Team Stats</StatTitle>
-              <StatItem>
-                <StatLabel>Player Count</StatLabel>
-                <StatValue>{teamData.stats.playerCount}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Games Played</StatLabel>
-                <StatValue>{teamData.stats.gamesPlayed}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Season Played</StatLabel>
-                <StatValue>{teamData.stats.seasonsPlayed}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Games Won</StatLabel>
-                <StatValue>{teamData.stats.gamesWon}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Season Won</StatLabel>
-                <StatValue>{teamData.stats.seasonsWon}</StatValue>
-              </StatItem>
-            </CardContent>
-          </TeamStatsCard>
-        </TeamColumn>
-      </TeamRow>
+      {isFetched && (
+        <TeamRow>
+          <TeamColumn>
+            <TeamHeader>
+              <TeamLogo src={teamImage} alt="Team Logo" />
+              <TeamName>{teamData.data.name}</TeamName>
+            </TeamHeader>
+          </TeamColumn>
+          <TeamColumn>
+            <TeamStatsCard>
+              <CardContent>
+                <StatTitle>Team Stats</StatTitle>
+                <StatItem>
+                  <StatLabel>Player Count</StatLabel>
+                  <StatValue>{teamData.stats.playerCount}</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>Games Played</StatLabel>
+                  <StatValue>{teamData.stats.gamesPlayed}</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>Season Played</StatLabel>
+                  <StatValue>{teamData.stats.seasonsPlayed}</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>Games Won</StatLabel>
+                  <StatValue>{teamData.stats.gamesWon}</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>Season Won</StatLabel>
+                  <StatValue>{teamData.stats.seasonsWon}</StatValue>
+                </StatItem>
+              </CardContent>
+            </TeamStatsCard>
+          </TeamColumn>
+        </TeamRow>
       )}
-            <HorizontalLine />
+      <HorizontalLine />
 
       {isFetched && (
-      <PlayerRow>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <SquadTitleContainer>
-            <SquadTitle>SQUAD</SquadTitle>
-          </SquadTitleContainer>
-        </div>
-        <PlayerGrid>
-          {teamData &&
-            teamData.players.map((player) => (
-            <NavLink className="PlayerCard" key={player.id} to={`/players/${player.id}`}>
-              <>
-                <img
-                  className="PlayerPhoto"
-                  src={
-                    playerImages[player.id]
-                  }
-                  alt={`${player.name}'s photo`}
-                />
-                <div className="PlayerName">
-                  {player.name}
-                </div>
-              </>
-              </NavLink>
-            ))}
-        </PlayerGrid>
-      </PlayerRow>
+        <PlayerRow>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SquadTitleContainer>
+              <SquadTitle>SQUAD</SquadTitle>
+            </SquadTitleContainer>
+          </div>
+          <PlayerGrid>
+            {teamData &&
+              teamData.players.map((player) => (
+                <NavLink
+                  className="PlayerCard"
+                  key={player.id}
+                  to={`/players/${player.id}`}
+                >
+                  <>
+                    <img
+                      className="PlayerPhoto"
+                      src={playerImages[player.id]}
+                      alt={`${player.name}'s photo`}
+                    />
+                    <div className="PlayerName">{player.name}</div>
+                  </>
+                </NavLink>
+              ))}
+          </PlayerGrid>
+        </PlayerRow>
       )}
     </Container>
   );
 };
 
 const HorizontalLine = styled.hr`
-border: none;
-border-top: 1px solid white;
-opacity:0.6;
-width: 90%;
-margin:10px;
+  border: none;
+  border-top: 1px solid white;
+  opacity: 0.6;
+  width: 90%;
+  margin: 10px;
 `;
 
 const Container = styled.div`
@@ -175,7 +172,7 @@ const TeamColumn = styled.div`
   justify-content: center; /* Center the content horizontally */
   padding: 30px 40px 0px 50px;
   // @media (min-width: 768px) {
-    // width: 50%;
+  // width: 50%;
   // }
 `;
 
@@ -196,7 +193,7 @@ const TeamName = styled.h1`
   font-weight: bold;
   font-size: 32px;
   max-width: 40px;
-  padding: 0px 150px 0px 10px;
+  padding: 0px 160px 0px 10px;
   opacity: 100;
 `;
 
@@ -222,7 +219,7 @@ const PlayerRow = styled.div`
 
 const SquadTitleContainer = styled.div`
   display: inline-block;
-  background-color: rgba(255, 255, 255,1); /* Adjust the background color */
+  background-color: rgba(255, 255, 255, 1); /* Adjust the background color */
   border-radius: 10%; /* Add border styling */
   padding: 0.5rem; /* Add padding to create some space around the title */
   // font-style: italic; /* Make the title italic */
@@ -244,25 +241,30 @@ const PlayerGrid = styled.div`
   grid-template-columns: repeat(6, 20rem); /* Adjust the card width as needed */
   justify-content: center; /* Center the grids horizontally */
   grid-gap: 2rem; /* Adjust the gap between cards */
-  .PlayerCard{
+  .PlayerCard {
     width: 20rem;
     height: 25rem;
     // padding: 1.5rem;
-    background-color: rgba(242, 242, 242, 0.5); /* Here, 0.5 is the opacity value */
+    background-color: rgba(
+      242,
+      242,
+      242,
+      0.5
+    ); /* Here, 0.5 is the opacity value */
     text-align: center;
     transition: transform 0.3s ease;
     border-radius: 10%;
-    cursor: pointer; 
+    cursor: pointer;
     &:hover {
       transform: scale(1.05);
     }
-  
+
     .PlayerPhoto {
-      width: 100%;
-      height: auto;
+      width: 19rem;
+      height: 20rem;
       // border-radius: 50%;
     }
-  
+
     .PlayerName {
       color: black;
       font-size: 20px;
