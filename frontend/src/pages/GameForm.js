@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled from "styled-components";
 import axios from "./Axios";
+import { FaCheck } from "react-icons/fa";
+
+const TickIcon = styled(FaCheck)`
+  color: green;
+  margin-left: 5px;
+`;
 
 const Container = styled.div`
     margin: 5px;
@@ -108,20 +114,22 @@ const GameForm = () => {
     const [playingTeams, setPlayingTeams] = useState([]);
     const [playingTeamsData, setPlayingTeamsData] = useState([]);
     const [gameData, setGameData] = useState({
-        gYear: null, gMonth: null, gDay: null, tossWon: {}, firstBat: {}, winner: {}, venue: ""
+        gYear: null, gMonth: null, gDay: null, tossWon: null, firstBat: null, winner: null, venue: ""
     });
     const [innings, setInnings] = useState([
         {
             battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
-            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
+            bowlingInnings: [{playerId: 0, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
         },
         {
             battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
-            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
+            bowlingInnings: [{playerId: 0, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
         }
     ]);
 
     const [outMethods, setOutMethods] = useState([]);
+
+    const [responseStatus, setResponseStatus] = useState(0);
 
     useEffect(() => {
         const FetchTeams = async () => {
@@ -177,8 +185,8 @@ const GameForm = () => {
         const inningToUpdate = updatedInnings[inningIndex][inningType];
 
         const newInning = {
-            battingInnings: [{playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'}],
-            bowlingInnings: [{playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}]
+            battingInnings: {playerId: 0, runs:null, balls: null, sixes: null, fours: null, dotsPlayed: null, out: 'BOWLED'},
+            bowlingInnings: {playerId: null, balls: null, maidenOvers: null, runs: null, wicketsTaken: null, wides: null, noBalls: null, legBy: null, by: null}
         };
         inningToUpdate.push(newInning[inningType]);
         setInnings(updatedInnings);
@@ -205,15 +213,47 @@ const GameForm = () => {
         const inningToUpdate = updatedInnings[inningIndex][inningType];
         inningToUpdate[index][field] = value; 
         setInnings(updatedInnings);
+
+        console.log(innings);
     };
 
     const handleGameDataChange = (key, value) => {
         const updatedGameData = {...gameData};
-        updatedGameData[key] = value;
+        console.log(key, value);
+        updatedGameData[key] = key === "venue" ? value : parseInt(value);
         setGameData(updatedGameData);
     }
 
-    const handleSubmit = () => {}
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        try {
+            const data = new FormData();
+            data.append("table", "game");
+            data.append("team1", playingTeams[0].id);
+            data.append("team2", playingTeams[1].id);
+            data.append("gYear", gameData.gYear);
+            data.append("gMonth", gameData.gMonth);
+            data.append("gDay", gameData.gDay);
+            data.append("tossWon", gameData.tossWon);
+            data.append("firstBat", gameData.firstBat);
+            data.append("winner", gameData.winner);
+            data.append("venue", gameData.venue);
+
+            data.append("innings", JSON.stringify(innings));
+
+            const headers = {
+                "Content-Type": "multipart/form-data",
+                "Access-Control-Allow-Origin": "*",
+            };
+
+            console.log(data);
+            const res = await axios.post("/insert", data, { headers });
+            setResponseStatus(res.status);
+        } catch (error) {
+            console.error(error.config);
+        }
+    }
 
     return ( teamList[0] &&
         <FormContainer>
@@ -222,7 +262,7 @@ const GameForm = () => {
             <InlineDiv>
                 <InputLarge 
                     value={gameData.gYear}
-                    onChange={e => handleGameDataChange("gYear", e.target.value)}
+                    onChange={e => handleGameDataChange("gYear", parseInt(e.target.value))}
                     type='number'
                     min={1900}
                     max={2090}
@@ -230,7 +270,7 @@ const GameForm = () => {
                 />
                 <InputLarge 
                     value={gameData.gMonth}
-                    onChange={e => handleGameDataChange("gMonth", e.target.value)}
+                    onChange={e => handleGameDataChange("gMonth", parseInt(e.target.value))}
                     type='number'
                     placeholder='Month'
                     min={1}
@@ -238,7 +278,7 @@ const GameForm = () => {
                 />
                 <InputLarge 
                     value={gameData.gDay}
-                    onChange={e => handleGameDataChange("gDay", e.target.value)}
+                    onChange={e => handleGameDataChange("gDay", parseInt(e.target.value))}
                     type='number'
                     placeholder='Day'
                     min={1}
@@ -254,7 +294,7 @@ const GameForm = () => {
             <TeamContainer>
                 <ContainerChild>
                     <Select
-                        value={playingTeams.length >= 1 && playingTeams[0] ? playingTeams[0].id : "select"} onChange={e => updatePlayingTeams(0, e.target.value)}>
+                        value={playingTeams.length >= 1 && playingTeams[0] ? playingTeams[0].id : "select"} onChange={e => updatePlayingTeams(0, parseInt(e.target.value))}>
                         <option value="select">Team 1</option>
                         {teamList[0].map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
@@ -264,7 +304,7 @@ const GameForm = () => {
 
                 <ContainerChild>
                     <Select
-                        value={playingTeams.length >= 2 && playingTeams[1] ? playingTeams[1].id : "select"} onChange={e => updatePlayingTeams(1, e.target.value)}>
+                        value={playingTeams.length >= 2 && playingTeams[1] ? playingTeams[1].id : "select"} onChange={e => updatePlayingTeams(1, parseInt(e.target.value))}>
                         <option value="select">Team 2</option>
                         {teamList[1].map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
@@ -275,23 +315,23 @@ const GameForm = () => {
 
             {(playingTeams.length >= 2) && (
                 <InlineDiv>
-                    <Select>
-                        value={gameData.tossWon.id} onChange={e => handleGameDataChange('tossWon', e.target.value)}
+                    <Select
+                        value={gameData.tossWon ? gameData.tossWon.id : "select"} onChange={e => handleGameDataChange('tossWon', e.target.value)}>
                         <option value="select">Toss Winner</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
                     </Select>
-                    <Select>
-                        value={gameData.firstBat.id} onChange={e => handleGameDataChange('firstBat', e.target.value)}
+                    <Select
+                        value={gameData.firstBat ? gameData.firstBat.id : "select"} onChange={e => handleGameDataChange('firstBat', e.target.value)}>
                         <option value="select">First Batting</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
                         ))}
                     </Select>
 
-                    <Select>
-                        value={gameData.winner.id} onChange={e => handleGameDataChange('winner', e.target.value)}
+                    <Select
+                        value={gameData.winner ? gameData.winner.id : "select"} onChange={e => handleGameDataChange('winner', e.target.value)}>
                         <option value="select">Winner</option>
                         {playingTeams.map((team) => (
                             <option value={team.id}>{team.abbrev}</option>
@@ -310,7 +350,7 @@ const GameForm = () => {
                                 <Container>
                                 <Container key={`${key}${index}`}>
                                     <Select  
-                                        value={batorbowl.playerId} onChange={e => handleInputChange(inningIndex, key, index, "playerId", e.target.value)}>
+                                        value={batorbowl.playerId} onChange={e => handleInputChange(inningIndex, key, index, "playerId", parseInt(e.target.value))}>
                                         <option value="select">Player</option>
                                         {playingTeamsData[inningIndex] && playingTeamsData[inningIndex].players && (
                                             playingTeamsData[inningIndex].players.map(player => (
@@ -320,14 +360,14 @@ const GameForm = () => {
                                     </Select>
                                     <Input 
                                         value={batorbowl.runs}
-                                        onChange={e => handleInputChange(inningIndex, key, index, "runs", e.target.value)}
+                                        onChange={e => handleInputChange(inningIndex, key, index, "runs", parseInt(e.target.value))}
                                         type='number'
                                         min={0}
                                         placeholder='Runs'
                                     />
                                     <Input 
                                         value={batorbowl.balls}
-                                        onChange={e => handleInputChange(inningIndex, key, index, "balls", e.target.value)}
+                                        onChange={e => handleInputChange(inningIndex, key, index, "balls", parseInt(e.target.value))}
                                         type='number'
                                         min={0}
                                         placeholder='Balls'
@@ -335,14 +375,14 @@ const GameForm = () => {
                                     {key === 'battingInnings' && (<span>                                        
                                         <Input 
                                             value={batorbowl.sixes}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "sixes", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "sixes", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='Sixes'
                                         />
                                         <Input 
                                             value={batorbowl.fours}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "fours", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "fours", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='Fours'
@@ -357,42 +397,42 @@ const GameForm = () => {
                                     {key === 'bowlingInnings' && (<span>
                                         <Input 
                                             value={batorbowl.maidenOvers}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "maidenOvers", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "maidenOvers", parseInt(e.target.value))}
                                             min={0}
                                             type='number'
                                             placeholder='Maiden'
                                         />
                                         <Input 
                                             value={batorbowl.wicketsTaken}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "wicketsTaken", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "wicketsTaken", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='Wickets'
                                         />
                                         <Input 
                                             value={batorbowl.wides}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "wides", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "wides", parseInt(e.target.value))}
                                             min={0}
                                             type='number'
                                             placeholder='Wides'
                                         />
                                         <Input 
                                             value={batorbowl.noBalls}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "noBalls", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "noBalls", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='No Balls'
                                         />
                                         <Input 
                                             value={batorbowl.legBy}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "legBy", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "legBy", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='Leg By'
                                         />
                                         <Input 
                                             value={batorbowl.by}
-                                            onChange={e => handleInputChange(inningIndex, key, index, "by", e.target.value)}
+                                            onChange={e => handleInputChange(inningIndex, key, index, "by", parseInt(e.target.value))}
                                             type='number'
                                             min={0}
                                             placeholder='By'
@@ -420,6 +460,7 @@ const GameForm = () => {
               innings[1]['bowlingInnings'][0].playerId !== 0) && (
                 <StyledButton onClick={handleSubmit}>
                     Submit
+                    {responseStatus === 200 && <TickIcon />}
                 </StyledButton>
               )}
         </FormContainer>

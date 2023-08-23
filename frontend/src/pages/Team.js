@@ -113,7 +113,7 @@ const TeamPage = () => {
             </SquadTitleContainer>
           </div>
           <PlayerGrid>
-            {teamData &&
+            {teamData && teamData.players &&
               teamData.players.map((player) => (
                 <NavLink
                   className="PlayerCard"

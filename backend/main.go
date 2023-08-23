@@ -74,7 +74,7 @@ type BattingInnings struct {
 	InningsId   int    `json:"inningsId" db:"inningsid"`
 	Order       int    `json:"order" db:"order"`
 	Runs        int    `json:"runs" db:"runs"`
-	BallsPlayed int    `json:"ballsPlayed" db:"ballsplayed"`
+	BallsPlayed int    `json:"balls" db:"ballsplayed"`
 	Sixes       int    `json:"sixes" db:"sixes"`
 	Fours       int    `json:"fours" db:"fours"`
 	DotsPlayed  int    `json:"dotsPlayed" db:"dotsplayed"`
@@ -84,7 +84,7 @@ type BattingInnings struct {
 type BowlingInnings struct {
 	PlayerId       int `json:"playerId" db:"playerid"`
 	InningsId      int `json:"inningsId" db:"inningsid"`
-	BowlsDelivered int `json:"bowlsDeliverd" db:"bowlddelivered"`
+	BowlsDelivered int `json:"bowlsDeliverd" db:"bowlsdelivered"`
 	MaidenOvers    int `json:"maidenOvers" db:"maidenovers"`
 	Runs           int `json:"runs" db:"runs"`
 	WicketsTaken   int `json:"wicketsTaken" db:"wicketstaken"`
@@ -320,18 +320,14 @@ func player(db *sqlx.DB) http.HandlerFunc {
 
 		res["battingStats"] = BattingStats{}
 		res["bowlingStats"] = BowlingStats{}
-		if data.Affinity == "BATSMAN" || data.Affinity == "ALL ROUNDER" || data.Affinity == "WICKET KEEPER BATSMAN" {
-			battingStats, err := readTable[BattingStats](db, "BattingStats", fmt.Sprintf("playerId = %d", data.Id))
-			if err == nil {
-				res["battingStats"] = battingStats
-			}
+		battingStats, err := readTable[BattingStats](db, "BattingStats", fmt.Sprintf("playerId = %d", data.Id))
+		if err == nil {
+			res["battingStats"] = battingStats
 		}
 
-		if data.Affinity == "ALL ROUNDER" || data.Affinity == "BOWLER" {
-			bowlingStats, err := readTable[BowlingStats](db, "BowlingStats", fmt.Sprintf("playerId = %d", data.Id))
-			if err == nil {
-				res["bowlingStats"] = bowlingStats
-			}
+		bowlingStats, err := readTable[BowlingStats](db, "BowlingStats", fmt.Sprintf("playerId = %d", data.Id))
+		if err == nil {
+			res["bowlingStats"] = bowlingStats
 		}
 
 		w.Header().Set("content-type", "application/json")
@@ -530,7 +526,76 @@ func addOwner(db *sqlx.DB, r *http.Request) error {
 	return nil
 }
 
-func addBattingInning(db *sqlx.DB, r *http.Request) error {
+func addGame(db *sqlx.DB, r *http.Request) error {
+	var game Games
+	genericParseForm(r, &game)
+	// fmt.Println(game)
+
+	inningsString := r.FormValue("innings")
+	fmt.Println(inningsString)
+	var innings [](map[string]([](map[string]any)))
+	json.Unmarshal([]byte(inningsString), &innings)
+
+	for i, inning := range innings {
+		battingInnings := inning["battingInnings"]
+		bowlingInnings := inning["bowlingInnings"]
+
+		var battings []BattingInnings
+		var bowlings []BowlingInnings
+		var thisInning Innings
+
+		for order, batting := range battingInnings {
+			var battingInning BattingInnings
+			jsonData, _ := json.Marshal(batting)
+			json.Unmarshal(jsonData, &battingInning)
+			battingInning.Order = order + 1
+
+			thisInning.TotalBalls += battingInning.BallsPlayed
+			battings = append(battings, battingInning)
+		}
+
+		for _, bowling := range bowlingInnings {
+			var bowlingInning BowlingInnings
+			jsonData, _ := json.Marshal(bowling)
+			json.Unmarshal(jsonData, &bowlingInning)
+
+			thisInning.TotalRun += bowlingInning.Runs
+			thisInning.TotalWickets += bowlingInning.WicketsTaken
+			bowlings = append(bowlings, bowlingInning)
+		}
+
+		err := db.QueryRow(genericInsertQuery(db, "Innings", &thisInning) + "RETURNING \"id\"").Scan(&thisInning.Id)
+		if err != nil {
+			return err
+		}
+
+		if i == 0 {
+			game.Innings1 = thisInning.Id
+		} else {
+			game.Innings2 = thisInning.Id
+		}
+
+		for _, batting := range battings {
+			batting.InningsId = thisInning.Id
+			_, err := db.Exec(genericInsertQuery(db, "BattingInnings", &batting))
+			if err != nil {
+				return err
+			}
+		}
+		for _, bowling := range bowlings {
+			bowling.InningsId = thisInning.Id
+			_, err := db.Exec(genericInsertQuery(db, "BowlingInnings", &bowling))
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+	_, err := db.Exec(genericInsertQuery(db, "Games", &game))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -546,8 +611,8 @@ func insert(db *sqlx.DB) http.HandlerFunc {
 			err = addTeam(db, r)
 		case "owners":
 			err = addOwner(db, r)
-		case "battingInning":
-			err = addBattingInning(db, r)
+		case "game":
+			err = addGame(db, r)
 		default:
 			err = errors.New("invalid table")
 		}
