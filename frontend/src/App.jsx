@@ -59,6 +59,8 @@ function App() {
           {/* <Route path="/login" element={<Login />} /> */}
           <Route path="/playerform" element={<PlayerForm />} />
           <Route path="/teamform" element={<TeamForm />} />
+          <Route path="/playerform" element={<PlayerForm />} />
+          <Route path="/teamform" element={<TeamForm />} />
         </Routes>
       </BrowserRouter>
       </Overlay>
