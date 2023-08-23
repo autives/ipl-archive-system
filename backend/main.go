@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -625,6 +626,26 @@ func insert(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
+func deletePlayer(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, _ := ioutil.ReadAll(r.Body)
+
+		fmt.Println(body)
+		id, _ := strconv.ParseInt(string(body), 10, 32)
+		query := fmt.Sprintf("DELETE FROM Players where id = %d", id)
+		fmt.Printf("Log [DELETE]: %s\n", query)
+
+		_, err := db.Exec(query)
+		if err != nil {
+			httpWriteError(w, err.Error())
+			fmt.Printf("Log [ERROR]: %s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func main() {
 	envFile, _ := os.ReadFile("../database/dbenv.json")
 	var dbEnv map[string]any
@@ -648,7 +669,8 @@ func main() {
 	handler.HandleFunc("/teams", teams(db))
 	handler.HandleFunc("/getEnum", getEnum(db))
 	handler.HandleFunc("/insert", insert(db))
-	handler.HandleFunc("/tableInfor", tableInfo(db))
+	handler.HandleFunc("/tableInfo", tableInfo(db))
+	handler.HandleFunc("/delete", deletePlayer(db))
 
 	c := cors.AllowAll().Handler(handler)
 	http.ListenAndServe(":8000", c)

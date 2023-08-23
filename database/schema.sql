@@ -69,13 +69,13 @@ create table if not exists Seasons (
        mostValued int not null,
        fairPlay int,
 
-       constraint fk_winner foreign key (winner) references Teams(id),
+       constraint fk_winner foreign key(winner) references Teams(id) on delete cascade on update cascade,
 
-       constraint fk_orangeCap foreign key (orangeCap) references Players(id),
-       constraint fk_purpleCap foreign key (purpleCap) references Players(id),
-       constraint fk_mostValued foreign key (mostValued) references Players(id),
+       constraint fk_orangeCap foreign key(orangeCap) references Players(id) on delete cascade on update cascade,
+       constraint fk_purpleCap foreign key(purpleCap) references Players(id) on delete cascade on update cascade,
+       constraint fk_mostValued foreign key(mostValued) references Players(id) on delete cascade on update cascade,
 
-       constraint fk_fairPlay foreign key (fairPlay) references Teams(id)
+       constraint fk_fairPlay foreign key(fairPlay) references Teams(id) on delete cascade on update cascade
 );
 
 create table if not exists Games (
@@ -93,16 +93,16 @@ create table if not exists Games (
        innings2 int not null,
        seasonNo int not null,
 
-       constraint fk_team1 foreign key (team1) references Teams(id),
-       constraint fk_team2 foreign key (team2) references Teams(id),
-       constraint fk_tossWon foreign key (tossWon) references Teams(id),
-       constraint fk_firstBat foreign key (firstBat) references Teams(id),
-       constraint fk_winner foreign key (winner) references Teams(id),
+       constraint fk_team1 foreign key(team1) references Teams(id) on delete cascade on update cascade,
+       constraint fk_team2 foreign key(team2) references Teams(id) on delete cascade on update cascade,
+       constraint fk_tossWon foreign key(tossWon) references Teams(id) on delete cascade on update cascade,
+       constraint fk_firstBat foreign key(firstBat) references Teams(id) on delete cascade on update cascade,
+       constraint fk_winner foreign key(winner) references Teams(id) on delete cascade on update cascade,
 
-       constraint fk_innings1 foreign key (innings1) references Innings(id),
-       constraint fk_innings2 foreign key (innings2) references Innings(id),
+       constraint fk_innings1 foreign key(innings1) references Innings(id) on delete cascade on update cascade,
+       constraint fk_innings2 foreign key(innings2) references Innings(id) on delete cascade on update cascade,
 
-       constraint fk_seasonNo foreign key (seasonNo) references Seasons(num)
+       constraint fk_seasonNo foreign key(seasonNo) references Seasons(num) on delete cascade on update cascade
 );
 
 
@@ -115,8 +115,8 @@ create table if not exists MemberOf (
 
        primary key (playerId, teamId),
 
-       constraint fk_player foreign key (playerId) references Players(id),
-       constraint fk_team foreign key (teamId) references Teams(id)
+       constraint fk_player foreign key(playerId) references Players(id) on delete cascade on update cascade,
+       constraint fk_team foreign key(teamId) references Teams(id) on delete cascade on update cascade
 );
 
 create table if not exists Coach (
@@ -134,8 +134,8 @@ create table if not exists Coaches (
 
        primary key (coachId, teamId, "from"),
        
-       constraint fk_coach foreign key (coachId) references Coach(id),
-       constraint fk_team foreign key (teamId) references Teams(id)
+       constraint fk_coach foreign key(coachId) references Coach(id) on delete cascade on update cascade,
+       constraint fk_team foreign key(teamId) references Teams(id) on delete cascade on update cascade
 );
 
 create table if not exists BattingInnings (
@@ -151,8 +151,8 @@ create table if not exists BattingInnings (
 
        primary key (playerId, inningsId),
 
-       constraint fk_player foreign key (playerId) references Players(id),
-       constraint fk_innings foreign key (inningsId) references Innings(id) 
+       constraint fk_player foreign key(playerId) references Players(id) on delete cascade on update cascade,
+       constraint fk_innings foreign key(inningsId) references Innings(id)  on delete cascade on update cascade
 );
 
 create table if not exists BowlingInnings (
@@ -169,8 +169,8 @@ create table if not exists BowlingInnings (
 
        primary key (playerId, inningsId),
 
-       constraint fk_player foreign key (playerId) references Players(id),
-       constraint fk_innings foreign key (inningsId) references Innings(id)
+       constraint fk_player foreign key(playerId) references Players(id) on delete cascade on update cascade,
+       constraint fk_innings foreign key(inningsId) references Innings(id) on delete cascade on update cascade
 );
 
 create table if not exists Owner (
@@ -187,8 +187,8 @@ create table if not exists Owns (
 
        primary key (ownerId, teamId),
 
-       constraint fk_owner foreign key (ownerId) references Owner(id),
-       constraint fk_team foreign key (teamId) references Teams(id)
+       constraint fk_owner foreign key(ownerId) references Owner(id) on delete cascade on update cascade,
+       constraint fk_team foreign key(teamId) references Teams(id) on delete cascade on update cascade
 );
 
 create table if not exists Captaincy (
@@ -199,8 +199,8 @@ create table if not exists Captaincy (
 
        primary key (playerId, teamId),
 
-       constraint fk_player foreign key (playerId) references Players(id),
-       constraint fk_team foreign key (teamId) references Teams(id)
+       constraint fk_player foreign key(playerId) references Players(id) on delete cascade on update cascade,
+       constraint fk_team foreign key(teamId) references Teams(id) on delete cascade on update cascade
 );
 
 create table if not exists Playoffs (
@@ -209,7 +209,7 @@ create table if not exists Playoffs (
        isQual boolean not null default false,
        isElim boolean not null default false,
 
-       constraint fk_game foreign key (gameId) references Games(id)
+       constraint fk_game foreign key(gameId) references Games(id) on delete cascade on update cascade
 );
 
 

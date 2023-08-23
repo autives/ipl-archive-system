@@ -229,7 +229,7 @@ function Players() {
         try {
             // Perform the delete action here
             // You can add your delete logic
-            const res = await axios.post('/delete', playerData.data.playerId);
+            const res = await axios.post('/delete', playerData.data.id)
             console.log(res.status);
             setIsDeleted(res.status);
     
