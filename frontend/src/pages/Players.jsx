@@ -6,6 +6,7 @@ import BowlingCard from "../components/BowlingCard";
 import ToggleButton from "../components/Toggle";
 import axios from "./Axios";
 import { useParams } from "react-router-dom";
+import {useNavigate} from 'react-router-dom'
 
 const MainContainer = styled.div`
     display : flex;
@@ -73,6 +74,22 @@ const Right_box = styled.div`
   width: 55rem;
   border-radius: 10%;
   opacity: 0.7;
+
+  .button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 20px;
+    height:2rem;
+    width:4rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    &:hover {
+      background-color: #c0392b;
+      transform: scale(1.05);
+    }
 `;
 
 const Photo = styled.img`
@@ -107,12 +124,34 @@ const PlayerStat = styled.div`
   border-radius: 10%;
 `;
 
+const DeleteButton = styled.button`
+  background-color: white;
+  opacity:1;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  text-color:black;
+  margin-top:2rem;
+  width:30%;
+  justify-self: end;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: grey;
+    transform: scale(1.05);
+  }
+`;
+
 function Players() {
   const [playerData, setPlayerData] = useState([]);
   const [isErr, setIsErr] = useState("");
   const [isFetched, setIsFetched] = useState(false);
   const [image, setImage] = useState();
   const { id } = useParams();
+  const [isConfirmed, setIsConfirmed]= useState(false);
+  const [isDeleted, setIsDeleted]=useState();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getPlayerData = async () => {
@@ -181,10 +220,34 @@ function Players() {
     economy: 0,
   };
 
+  const handleDeleteClick = async (event) => {
+    event.preventDefault();
+    const Confirmed = window.confirm('Are you sure you want to delete this item?');
+    // setIsConfirmed(Confirmed);
+
+    if(Confirmed){
+        try {
+            // Perform the delete action here
+            // You can add your delete logic
+            const res = await axios.post('/delete', playerData.data.playerId);
+            console.log(res.status);
+            setIsDeleted(res.status);
+    
+            // After successful deletion, navigate to the home page
+            if (res.status === 200) {
+              navigate('/');
+            }
+          } catch (error) {
+            // Handle errors here if needed
+            console.error('Error deleting item:', error);
+          }
+    }
+  };
   return (
     <MainContainer>
       {isErr !== "" && <h2>{isErr}</h2>}
       {isFetched && (
+        <>
         <Container>
           <Left_box>
             <Photo src={image} alt="haina hola" />
@@ -220,8 +283,11 @@ function Players() {
                 <BowlingCard bowlingStats={bowlingStats} />
               )}
             </PlayerStat>
+            <DeleteButton classname ="button" onClick={handleDeleteClick}>Delete Player</DeleteButton>
           </Right_box>
         </Container>
+
+          </>
       )}
     </MainContainer>
   );
