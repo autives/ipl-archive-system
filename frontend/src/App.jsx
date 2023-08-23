@@ -12,7 +12,7 @@ import Header from "./components/Header";
 import Teams from "./pages/Teams";
 import Players from "./pages/Players";
 import Team from "./pages/Team";
-import Login from "./pages/Login";
+import TeamForm from './pages/TeamForm';
 import PlayerForm from  "./pages/PlayerForm";
 import GameForm from "./pages/GameForm"
 import { ThemeProvider, styled } from "styled-components";
@@ -54,9 +54,14 @@ function App() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/players/:id" element={<Players />} />
           <Route path="/team/:id" element={<Team />} />
+<<<<<<< HEAD
           <Route path="/form" element={<PlayerForm />} />
           <Route path="/gameform" element={<GameForm />} />
           <Route path="/login" element={<Login />} />
+=======
+          <Route path="/playerform" element={<PlayerForm />} />
+          <Route path="/teamform" element={<TeamForm />} />
+>>>>>>> 01bd3a13e5f1034a437940f013cf00824f8e5417
         </Routes>
       </BrowserRouter>
       </Overlay>
