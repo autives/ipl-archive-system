@@ -106,6 +106,8 @@ const TeamPage = () => {
         </TeamColumn>
       </TeamRow>
       )}
+            <HorizontalLine />
+
       {isFetched && (
       <PlayerRow>
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -137,6 +139,14 @@ const TeamPage = () => {
     </Container>
   );
 };
+
+const HorizontalLine = styled.hr`
+border: none;
+border-top: 1px solid white;
+opacity:0.6;
+width: 90%;
+margin:10px;
+`;
 
 const Container = styled.div`
   display: flex;
@@ -194,7 +204,7 @@ const TeamStatsCard = styled.div`
   background-color: #ffffff;
   border-radius: 8px;
   width: 350px;
-  opacity: 0.7;
+  opacity: 0.6;
   box-shadow: ${({ isHovered }) =>
     isHovered ? "0px 4px 8px rgba(0, 0, 0, 0.1)" : "none"};
   transition: box-shadow 0.3s ease-in-out;
@@ -212,10 +222,10 @@ const PlayerRow = styled.div`
 
 const SquadTitleContainer = styled.div`
   display: inline-block;
-  background-color: rgb(10, 10, 107); /* Adjust the background color */
+  background-color: rgba(255, 255, 255,1); /* Adjust the background color */
   border-radius: 10%; /* Add border styling */
   padding: 0.5rem; /* Add padding to create some space around the title */
-  font-style: italic; /* Make the title italic */
+  // font-style: italic; /* Make the title italic */
   align-items: center;
   justify-contents: center;
   width: auto;
@@ -223,8 +233,8 @@ const SquadTitleContainer = styled.div`
 `;
 
 const SquadTitle = styled.h2`
-  color: white;
-  font-style: italic;
+  color: black;
+  // font-style: italic;
 `;
 
 const PlayerGrid = styled.div`

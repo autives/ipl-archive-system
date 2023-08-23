@@ -24,12 +24,12 @@ drop type if exists BowlingAffinity;
 drop type if exists CoachType;
 drop type if exists WicketMethod;
 
-create type PlayerAffinity as enum ('BATSMAN', 'BOWLER', 'ALL_ROUNDER', 'WICKET_KEEPER', 'WICKET_KEEPER_BATSMAN');
-create type BattingAffinity as enum ('RIGHT_HANDED', 'LEFT_HANDED');
-create type BowlingAffinity as enum ('RIGHT_HAND_FAST', 'RIGHT_HAND_MEDIUM_FAST',
-                                     'RIGHT_HAND_OFF_BREAK', 'RIGHT_HAND_LEG_BREAK', 'RIGHT_HAND_WRIST_SPIN',
-                                     'LEFT_HAND_FAST', 'LEFT_HAND_MEDIUM_FAST',
-                                     'LEFT_HAND_OFF_BREAK', 'LEFT_HAND_LEG_BREAK', 'LEFT_HAND_WRIST_SPIN');
+create type PlayerAffinity as enum ('BATSMAN', 'BOWLER', 'ALL ROUNDER', 'WICKET KEEPER', 'WICKET KEEPER BATSMAN');
+create type BattingAffinity as enum ('RIGHT HANDED', 'LEFT HANDED');
+create type BowlingAffinity as enum ('RIGHT HAND FAST', 'RIGHT HAND MEDIUM FAST',
+                                     'RIGHT HAND OFF BREAK', 'RIGHT HAND LEG BREAK', 'RIGHT HAND WRIST SPIN',
+                                     'LEFT HAND FAST', 'LEFT HAND MEDIUM FAST',
+                                     'LEFT HAND OFF BREAK', 'LEFT HAND LEG BREAK', 'LEFT HAND WRIST SPIN');
 create type CoachType as enum ('HEAD', 'BATTING', 'BOWLING', 'FIELDING', 'FITNESS', 'PERFORMANCE');
 create type WicketMethod as enum ('BOWLED', 'CATCH', 'RUNOUT',
                                   'STUMP', 'LBW', 'OTHERS');

@@ -4,9 +4,13 @@ import { FaSearch } from "react-icons/fa";
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 
+const Container= styled.div`
+  padding-top:25rem;
+`
+
 const Search = styled.div`
   background-color: white;
-  width: 20%;
+  width: 100rem;
   // border-top-left-radius: 10px;
   border-radius: 10px;
   // border-top-right-radius: 10px;
@@ -14,6 +18,7 @@ const Search = styled.div`
   padding: 0rem 1rem 0rem 1rem;
   box-shadow: 0px 0px 0px white;
   display: flex;
+  position:relative;
   align-items: center;
   justify-items: flex-start;
   position: ;
@@ -21,8 +26,8 @@ const Search = styled.div`
     color: red;
     justify-self: start;
     align-self: center;
-    height: 100%;
-    width: 5%;
+    height: 2.8rem;
+    width: 4rem;
   }
 
   input {
@@ -47,14 +52,15 @@ const SearchResults = styled.div`
   display: flex;
   top: 100%;
   flex-direction: column;
-  max-height: 20rem;
+  max-height: 21rem;
   overflow-y: auto;
   margin-top: 5px;
-  width: 20%;
+  // width: 20%;
   .SearchResultItem {
     background-color: white;
     color: black;
     height: 4.2rem;
+    position:relative;
     padding: 1rem 0rem 0rem 3rem;
     font-size: 1.7rem;
     font-weight: 500;
@@ -62,7 +68,7 @@ const SearchResults = styled.div`
     width: 100%;
     border: 1px solid #ccc;
     &:hover {
-      background-color: grey;
+      background: rgba(255,255,255,0.7);
     }
   }
 `;
@@ -132,7 +138,7 @@ function SearchBar() {
   }
 
   return (
-    <div>
+    <Container >
       <Search ref={searchRef} onClick={() => setSelected(true)}>
         <FaSearch className="icon" id="search-icon" />
         <input
@@ -161,7 +167,7 @@ function SearchBar() {
           )}
         </SearchResults>
       )}
-    </div>
+    </Container>
   );
 }
 

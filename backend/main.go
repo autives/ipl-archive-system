@@ -319,14 +319,14 @@ func player(db *sqlx.DB) http.HandlerFunc {
 
 		res["battingStats"] = BattingStats{}
 		res["bowlingStats"] = BowlingStats{}
-		if data.Affinity == "BATSMAN" || data.Affinity == "ALL_ROUNDER" || data.Affinity == "WICKET_KEEPER_BATSMAN" {
+		if data.Affinity == "BATSMAN" || data.Affinity == "ALL ROUNDER" || data.Affinity == "WICKET KEEPER BATSMAN" {
 			battingStats, err := readTable[BattingStats](db, "BattingStats", fmt.Sprintf("playerId = %d", data.Id))
 			if err == nil {
 				res["battingStats"] = battingStats
 			}
 		}
 
-		if data.Affinity == "ALL_ROUNDER" || data.Affinity == "BOWLER" {
+		if data.Affinity == "ALL ROUNDER" || data.Affinity == "BOWLER" {
 			bowlingStats, err := readTable[BowlingStats](db, "BowlingStats", fmt.Sprintf("playerId = %d", data.Id))
 			if err == nil {
 				res["bowlingStats"] = bowlingStats
@@ -455,6 +455,7 @@ func tableInfo(db *sqlx.DB) http.HandlerFunc {
 func addPlayer(db *sqlx.DB, r *http.Request) error {
 	var p Player
 	genericParseForm(r, &p)
+	fmt.Println(p)
 	err := db.QueryRow(genericInsertQuery(db, r.FormValue("table"), &p) + "RETURNING \"id\"").Scan(&p.Id)
 	if err != nil {
 		return err
