@@ -16,6 +16,7 @@ import Forms from "./pages/Forms";
 import TeamForm from './pages/TeamForm';
 import PlayerForm from  "./pages/PlayerForm";
 import GameForm from "./pages/GameForm"
+import SeasonFrom from "./pages/SeasonForm"
 import { ThemeProvider, styled } from "styled-components";
 import { GlobalStyle } from "./GlobalStyle";
 
@@ -62,6 +63,7 @@ function App() {
           <Route path="/teamform" element={<TeamForm />} />
           <Route path="/playerform" element={<PlayerForm />} />
           <Route path="/teamform" element={<TeamForm />} />
+          <Route path="/seasonform" element={<SeasonFrom />} />
           <Route path="/forms" element={<Forms />} />
         </Routes>
       </BrowserRouter>

@@ -58,6 +58,17 @@ const InlineDiv = styled.div`
     width: 100%
 `;
 
+const CheckboxContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 10px;
+`;
+
+const CheckboxLabel = styled.label`
+  margin-left: 5px;
+  font-size: 14px;
+`;
+
 const InputLarge = styled.input`
     width: 200px;
     padding: 5px;
@@ -111,10 +122,11 @@ const StyledButton = styled.button`
 
 const GameForm = () => {
     const [teamList, setTeamList] = useState([[], []])
+    const [seasonsList, setSeasonsList] = useState([]);
     const [playingTeams, setPlayingTeams] = useState([]);
     const [playingTeamsData, setPlayingTeamsData] = useState([]);
     const [gameData, setGameData] = useState({
-        gYear: null, gMonth: null, gDay: null, tossWon: null, firstBat: null, winner: null, venue: ""
+        season: null, gYear: null, gMonth: null, gDay: null, tossWon: null, firstBat: null, winner: null, venue: "", isQual: false, isFinal: false, isElim: false
     });
     const [innings, setInnings] = useState([
         {
@@ -145,6 +157,12 @@ const GameForm = () => {
             setOutMethods(methods.data)
         }
 
+        const FetchSeasons = async () => {
+            const res = await axios.get(`/seasons`);
+            setSeasonsList(res.data);
+        }
+
+        if(seasonsList.length <= 0) { FetchSeasons(); }
         if(teamList[0].length <= 0) { FetchTeams(); }
         if(outMethods.length <= 0) { GetOutMethods(); }
     })
@@ -219,8 +237,7 @@ const GameForm = () => {
 
     const handleGameDataChange = (key, value) => {
         const updatedGameData = {...gameData};
-        console.log(key, value);
-        updatedGameData[key] = key === "venue" ? value : parseInt(value);
+        updatedGameData[key] = value;
         setGameData(updatedGameData);
     }
 
@@ -239,6 +256,10 @@ const GameForm = () => {
             data.append("firstBat", gameData.firstBat);
             data.append("winner", gameData.winner);
             data.append("venue", gameData.venue);
+            data.append("seasonNo", gameData.season);
+            data.append("isQual", gameData.isQual);
+            data.append("isElim", gameData.isElim);
+            data.append("isFinal", gameData.isFinal);
 
             data.append("innings", JSON.stringify(innings));
 
@@ -260,6 +281,14 @@ const GameForm = () => {
             <h2>Multiple Inning Form</h2>
             
             <InlineDiv>
+                <Select
+                    value={gameData.season} onChange={e => handleGameDataChange("season", parseInt(e.target.value))}>
+                    <option value="">Season</option>
+                    {seasonsList.map((seasons) => (
+                        <option value={seasons.num}>{seasons.num}</option>
+                    ))}
+                </Select>
+
                 <InputLarge 
                     value={gameData.gYear}
                     onChange={e => handleGameDataChange("gYear", parseInt(e.target.value))}
@@ -289,6 +318,38 @@ const GameForm = () => {
                     onChange={e => handleGameDataChange("venue", e.target.value)}
                     placeholder='Venue'
                 />         
+            </InlineDiv>
+
+            <InlineDiv>
+                <CheckboxContainer>
+                    <input
+                    type="checkbox"
+                    id="qual"
+                    checked={gameData.isQual}
+                    onChange={() => handleGameDataChange("isQual", !gameData.isQual)}
+                    />
+                    <CheckboxLabel htmlFor="qual">Qualifier</CheckboxLabel>
+                </CheckboxContainer>
+
+                <CheckboxContainer>
+                    <input
+                    type="checkbox"
+                    id="elim"
+                    checked={gameData.isElim}
+                    onChange={() => handleGameDataChange("isElim", !gameData.isElim)}
+                    />
+                    <CheckboxLabel htmlFor="elim">Eliminator</CheckboxLabel>
+                </CheckboxContainer>
+
+                <CheckboxContainer>
+                    <input
+                    type="checkbox"
+                    id="final"
+                    checked={gameData.isFinal}
+                    onChange={() => handleGameDataChange("isFinal", !gameData.isFinal)}
+                    />
+                    <CheckboxLabel htmlFor="final">Final</CheckboxLabel>
+                </CheckboxContainer>
             </InlineDiv>
 
             <TeamContainer>

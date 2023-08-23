@@ -63,13 +63,12 @@ create table if not exists Players (
 
 create table if not exists Seasons (
        num int not null primary key,
-       winner int not null,
+       winner int not null default 0,
        orangeCap int not null,
        purpleCap int not null,
        mostValued int not null,
        fairPlay int,
 
-       constraint fk_winner foreign key(winner) references Teams(id) on delete cascade on update cascade,
 
        constraint fk_orangeCap foreign key(orangeCap) references Players(id) on delete cascade on update cascade,
        constraint fk_purpleCap foreign key(purpleCap) references Players(id) on delete cascade on update cascade,
@@ -306,4 +305,22 @@ from
        left join information_schema.table_constraints as tc
               on kcu.constraint_name = tc.constraint_name
        left join information_schema.constraint_column_usage as ccu
-              on ccu.constraint_name = kcu.constraint_name
+              on ccu.constraint_name = kcu.constraint_name;
+
+
+create or replace function update_season_winner()
+returns TRIGGER AS $$
+begin
+    if new.isFinal then
+       update Seasons
+       set winner = (select winner from Games where id = new.gameId)
+       where num = (select seasonNo from Games where id = new.gameId);
+    end if;
+    return NEW;
+end;
+$$ language plpgsql;
+
+create trigger trigger_update_season_winner
+after insert on Playoffs
+for each row
+execute function update_season_winner();

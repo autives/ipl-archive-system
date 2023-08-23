@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -39,8 +38,8 @@ type Team struct {
 }
 
 type Seasons struct {
-	Num        int `json:"num" sql-insert:"f" db:"num"`
-	Winner     int `json:"winner" db:"winner"`
+	Num        int `json:"num" db:"num"`
+	Winner     int `json:"winner" sql-insert:"f" db:"winner"`
 	OrangeCap  int `json:"orangeCap" db:"orangecap"`
 	PurpleCap  int `json:"purpleCap" db:"purplecap"`
 	MostValued int `json:"mostValued" db:"mostvalued"`
@@ -138,10 +137,10 @@ type Captaincy struct {
 }
 
 type Playoffs struct {
-	GameId  int
-	IsFinal bool
-	IsQual  bool
-	IsElim  bool
+	GameId  int  `db:"gameid"`
+	IsFinal bool `db:"isfinal"`
+	IsQual  bool `db:"isqual"`
+	IsElim  bool `db:"iselim"`
 }
 
 type BattingStats struct {
@@ -191,6 +190,7 @@ var (
 	formats = map[reflect.Kind]string{
 		reflect.Int:    "%d",
 		reflect.String: "'%s'",
+		reflect.Bool:   "%t",
 	}
 )
 
@@ -266,7 +266,7 @@ func readTable[V Player | Team | BattingStats | BowlingStats | TeamStats](db *sq
 	return res, nil
 }
 
-func readTableMultiRow[V Player | Team | BattingStats | BowlingStats | TeamStats | MemberOf | TableInfo](db *sqlx.DB, table string, cond string) ([]V, error) {
+func readTableMultiRow[V Player | Team | BattingStats | BowlingStats | TeamStats | MemberOf | TableInfo | Seasons](db *sqlx.DB, table string, cond string) ([]V, error) {
 	query := "select * from " + table
 	if cond != "" {
 		query += " where " + cond
@@ -351,6 +351,37 @@ func teams(db *sqlx.DB) http.HandlerFunc {
 		res["teams"] = teams
 		resBody, _ := json.Marshal(res)
 
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Write(resBody)
+	}
+}
+
+func players(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		players, err := readTableMultiRow[Player](db, "Players", "")
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+
+		resBody, _ := json.Marshal(players)
+
+		w.Header().Set("content-type", "apllication/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Write(resBody)
+	}
+}
+
+func seasons(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		seasons, err := readTableMultiRow[Seasons](db, "Seasons", "")
+		if err != nil {
+			httpWriteError(w, err.Error())
+			return
+		}
+
+		resBody, _ := json.Marshal(seasons)
 		w.Header().Set("content-type", "apllication/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Write(resBody)
@@ -592,7 +623,37 @@ func addGame(db *sqlx.DB, r *http.Request) error {
 		}
 
 	}
-	_, err := db.Exec(genericInsertQuery(db, "Games", &game))
+	err := db.QueryRow(genericInsertQuery(db, "Games", &game) + "RETURNING \"id\"").Scan(&game.Id)
+	if err != nil {
+		return err
+	}
+
+	isFinal, _ := strconv.ParseBool(r.FormValue("isFinal"))
+	isQual, _ := strconv.ParseBool(r.FormValue("isQual"))
+	isElim, _ := strconv.ParseBool(r.FormValue("isElim"))
+
+	fmt.Println(isFinal)
+
+	if isFinal || isQual || isElim {
+		var playOff Playoffs
+		playOff.GameId = game.Id
+		playOff.IsElim = isElim
+		playOff.IsFinal = isFinal
+		playOff.IsQual = isQual
+
+		_, err := db.Exec(genericInsertQuery(db, "PlayOffs", &playOff))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addSeason(db *sqlx.DB, r *http.Request) error {
+	var season Seasons
+	genericParseForm(r, &season)
+
+	_, err := db.Exec(genericInsertQuery(db, r.FormValue("table"), &season))
 	if err != nil {
 		return err
 	}
@@ -614,11 +675,14 @@ func insert(db *sqlx.DB) http.HandlerFunc {
 			err = addOwner(db, r)
 		case "game":
 			err = addGame(db, r)
+		case "seasons":
+			err = addSeason(db, r)
 		default:
 			err = errors.New("invalid table")
 		}
 
 		if err != nil {
+			fmt.Printf("Log [ERROR]: %s\n", err.Error())
 			httpWriteError(w, err.Error())
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -628,7 +692,7 @@ func insert(db *sqlx.DB) http.HandlerFunc {
 
 func deletePlayer(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 
 		fmt.Println(body)
 		id, _ := strconv.ParseInt(string(body), 10, 32)
@@ -667,6 +731,8 @@ func main() {
 	handler.HandleFunc("/team", team(db))
 	handler.HandleFunc("/image", image)
 	handler.HandleFunc("/teams", teams(db))
+	handler.HandleFunc("/players", players(db))
+	handler.HandleFunc("/seasons", seasons(db))
 	handler.HandleFunc("/getEnum", getEnum(db))
 	handler.HandleFunc("/insert", insert(db))
 	handler.HandleFunc("/tableInfo", tableInfo(db))

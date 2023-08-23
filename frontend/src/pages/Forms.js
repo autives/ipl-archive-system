@@ -56,6 +56,7 @@ const Forms = () => {
         <Title>Choose a Form</Title>
         <FormLink to="/playerform">Player Form</FormLink>
         <FormLink to="/teamform">Team Form</FormLink>
+        <FormLink to="/seasonform">Season Form</FormLink>
         <FormLink to="/gameform">Game Form</FormLink>
       </FormsWrapper>
     </Container>
