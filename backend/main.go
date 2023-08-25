@@ -249,7 +249,7 @@ func genericParseForm(r *http.Request, data interface{}) {
 	}
 }
 
-func readTable[V Player | Team | BattingStats | BowlingStats | TeamStats](db *sqlx.DB, table string, cond string) (V, error) {
+func readTable[V Player | Team | BattingStats | BowlingStats | TeamStats | Captaincy](db *sqlx.DB, table string, cond string) (V, error) {
 	query := "select * from " + table
 	if cond != "" {
 		query += " where " + cond
@@ -412,10 +412,15 @@ func team(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
+		captaincy, err := readTable[Captaincy](db, "Captaincy", fmt.Sprintf("teamId = %d", id))
+
 		var players []Player
 		for _, member := range membership {
 			if member.To == 0 {
 				player, _ := readTable[Player](db, "Players", fmt.Sprintf("id = %d", member.PlayerId))
+				if player.Id == captaincy.PlayerId && captaincy.To == 0 {
+					player.Name += " (C)"
+				}
 				players = append(players, player)
 			}
 		}
@@ -490,8 +495,44 @@ func addPlayer(db *sqlx.DB, r *http.Request) error {
 		return err
 	}
 
+	isCoach, _ := strconv.ParseBool(r.FormValue("isCoach"))
+	isCaptain, _ := strconv.ParseBool(r.FormValue("isCaptain"))
+
+	fromDateCoach, _ := strconv.ParseInt(r.FormValue("fromDateCoach"), 10, 32)
+	toDateCoach, _ := strconv.ParseInt(r.FormValue("toDateCoach"), 10, 32)
+	fromDateCaptain, _ := strconv.ParseInt(r.FormValue("fromDateCaptain"), 10, 32)
+	toDateCaptain, _ := strconv.ParseInt(r.FormValue("toDateCaptain"), 10, 32)
+
 	var member MemberOf
 	genericParseForm(r, &member)
+
+	if isCoach {
+		coach := Coach{0, p.Name, p.Id}
+		err := db.QueryRow(genericInsertQuery(db, "coach", &coach) + "RETURNING \"id\"").Scan(&coach.Id)
+		if err != nil {
+			return err
+		}
+
+		teamId, _ := strconv.ParseInt(r.FormValue("teamId"), 10, 32)
+		coaches := Coaches{coach.Id, int(teamId), int(fromDateCoach), int(toDateCoach), "HEAD"}
+		_, err = db.Exec(genericInsertQuery(db, "Coaches", &coaches))
+		if err != nil {
+			return err
+		}
+
+		member.To = coaches.From
+		toDateCaptain = int64(coaches.From)
+	}
+
+	if isCaptain {
+		teamId, _ := strconv.ParseInt(r.FormValue("teamId"), 10, 32)
+		captaincy := Captaincy{p.Id, int(teamId), int(fromDateCaptain), int(toDateCaptain)}
+		_, err = db.Exec(genericInsertQuery(db, "Captaincy", &captaincy))
+		if err != nil {
+			return err
+		}
+	}
+
 	member.PlayerId = p.Id
 	_, err = db.Exec(genericInsertQuery(db, "memberOf", &member))
 	fmt.Println("hello")

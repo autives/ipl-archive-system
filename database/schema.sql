@@ -303,4 +303,4 @@ FOR EACH ROW
 EXECUTE FUNCTION update_season_winner();
 
 
-
+CREATE INDEX players_name_index IF NOT EXISTS ON Players(name); 

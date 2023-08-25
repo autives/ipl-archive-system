@@ -278,7 +278,7 @@ const GameForm = () => {
 
     return ( teamList[0] &&
         <FormContainer>
-            <h2>Multiple Inning Form</h2>
+            <h2>Game Form</h2>
             
             <InlineDiv>
                 <Select
