@@ -752,7 +752,7 @@ func deletePlayer(db *sqlx.DB) http.HandlerFunc {
 }
 
 func main() {
-	envFile, _ := os.ReadFile("../database/dbenv.json")
+	envFile, _ := os.ReadFile("../database`/dbenv.json")
 	var dbEnv map[string]any
 	json.Unmarshal(envFile, &dbEnv)
 	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbEnv["host"].(string), int(dbEnv["port"].(float64)), dbEnv["user"].(string), dbEnv["password"].(string), dbEnv["dbname"].(string))
