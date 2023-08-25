@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 
 const Container= styled.div`
-  padding-top:25rem;
+  padding-top:20rem;
 `
 
 const Search = styled.div`

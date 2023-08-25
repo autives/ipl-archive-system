@@ -27,13 +27,14 @@ const TeamGrid = styled.div`
       transform: scale(1.05);
       }
     .Name, .Desc {
+      max-width:25rem;
       color: black;
     }
 `;
 
 const TeamLogo = styled.img`
-  width: 15rem;
-  height: 10rem;
+  width: auto;
+  height: 15rem;
   margin-bottom: 1rem;
   border-radius: 3%
   overflow : hidden; 

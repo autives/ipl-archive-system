@@ -260,7 +260,7 @@ const PlayerGrid = styled.div`
     }
 
     .PlayerPhoto {
-      width: 19rem;
+      max-width: 20rem;
       height: 20rem;
       // border-radius: 50%;
     }
@@ -268,9 +268,9 @@ const PlayerGrid = styled.div`
     .PlayerName {
       color: black;
       font-size: 20px;
-      font-weight: bold;
-      opacity: 0.7;
-      margin-top: 2px;
+      font-weight: 500;
+      opacity: 1;
+      margin-top: 3px;
     }
   }
 `;

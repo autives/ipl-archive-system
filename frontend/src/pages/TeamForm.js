@@ -19,7 +19,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
-  height: 100%;
+  height: 92.5%;
   background-color: #f0f6fd;
 `;
 

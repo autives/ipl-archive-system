@@ -19,7 +19,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
-  height: 100%;
+  height: 95%;
   background-color: #f0f6fd;
 `;
 
@@ -71,7 +71,7 @@ const StyledSelect = styled.select`
 `;
 
 const ImagePreview = styled.img`
-  max-width: 1;
+  max-width: 10rem;
   height: 10rem;
   margin-top: 15px;
 `;
